@@ -119,7 +119,7 @@ class VoiceService {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      return await Voice.isAvailable();
+      return await Voice.isAvailable() === 1;
     } catch (error) {
       console.error('Voice availability check error:', error);
       return false;
@@ -236,7 +236,7 @@ class VoiceService {
    */
   async getSupportedLanguages(): Promise<string[]> {
     try {
-      return await Voice.getSupportedLanguages();
+      return (await Voice.getSpeechRecognitionServices()) || [];
     } catch (error) {
       console.error('Get supported languages error:', error);
       return [];

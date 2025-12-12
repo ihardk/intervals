@@ -19,25 +19,19 @@ interface TextInputProps extends RNTextInputProps {
   showCounter?: boolean;
 }
 
-export const TextInput: React.FC<TextInputProps> = ({
-  label,
-  error,
-  maxLength,
-  showCounter = false,
-  value = '',
-  style,
-  ...props
-}) => {
-  return (
-    <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <RNTextInput
-        style={[styles.input, error && styles.inputError, style]}
-        placeholderTextColor={Colors.grey600}
-        {...props}
-        value={value}
-        maxLength={maxLength}
-      />
+export const TextInput = React.forwardRef<RNTextInput, TextInputProps>(
+  ({ label, error, maxLength, showCounter = false, value = '', style, ...props }, ref) => {
+    return (
+      <View style={styles.container}>
+        {label && <Text style={styles.label}>{label}</Text>}
+        <RNTextInput
+          ref={ref}
+          style={[styles.input, error && styles.inputError, style]}
+          placeholderTextColor={Colors.grey600}
+          {...props}
+          value={value}
+          maxLength={maxLength}
+        />
       <View style={styles.footer}>
         {error ? (
           <Text style={styles.error}>{error}</Text>
@@ -52,7 +46,9 @@ export const TextInput: React.FC<TextInputProps> = ({
       </View>
     </View>
   );
-};
+});
+
+TextInput.displayName = 'TextInput';
 
 const styles = StyleSheet.create({
   container: {

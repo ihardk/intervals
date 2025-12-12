@@ -2,7 +2,7 @@
  * Logging Screen - Main screen for creating log entries
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -59,34 +59,37 @@ export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
     fetchTodayLogs();
   }, []);
 
-  const handleVoiceRecordingComplete = async (transcription: string, audioPath?: string) => {
-    setShowVoiceRecorder(false);
+  const handleVoiceRecordingComplete = useCallback(
+    async (transcription: string, audioPath?: string) => {
+      setShowVoiceRecorder(false);
 
-    try {
-      setIsSubmitting(true);
+      try {
+        setIsSubmitting(true);
 
-      await createLog({
-        content: transcription,
-        entryType: 'voice',
-        timestamp: Date.now(),
-        audioPath,
-      });
+        await createLog({
+          content: transcription,
+          entryType: 'voice',
+          timestamp: Date.now(),
+          audioPath,
+        });
 
-      Alert.alert('Success', 'Voice log saved!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save voice log');
-      console.error('Voice log error:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        Alert.alert('Success', 'Voice log saved!');
+      } catch (error) {
+        Alert.alert('Error', 'Failed to save voice log');
+        console.error('Voice log error:', error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [createLog]
+  );
 
-  const handleVoiceCancel = () => {
+  const handleVoiceCancel = useCallback(() => {
     setShowVoiceRecorder(false);
     setInputMode('text');
-  };
+  }, []);
 
-  const toggleInputMode = () => {
+  const toggleInputMode = useCallback(() => {
     if (inputMode === 'text') {
       setInputMode('voice');
       setShowVoiceRecorder(true);
@@ -97,7 +100,7 @@ export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
         inputRef.current?.focus();
       }, 100);
     }
-  };
+  }, [inputMode]);
 
   const handleSubmit = async () => {
     if (!logContent.trim()) {
@@ -128,7 +131,7 @@ export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
     }
   };
 
-  const recentLogs = logs.slice(0, 3);
+  const recentLogs = useMemo(() => logs.slice(0, 3), [logs]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -143,28 +146,38 @@ export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
         </View>
 
         {/* Input Mode Toggle */}
-        {isVoiceEnabled && !showVoiceRecorder && (
-          <View style={styles.modeToggle}>
-            <TouchableOpacity
-              style={[styles.modeButton, inputMode === 'text' && styles.modeButtonActive]}
-              onPress={() => setInputMode('text')}
-              activeOpacity={0.7}
+        {/* {isVoiceEnabled && !showVoiceRecorder && ( */}
+        <View style={styles.modeToggle}>
+          <TouchableOpacity
+            style={[styles.modeButton, inputMode === 'text' && styles.modeButtonActive]}
+            onPress={toggleInputMode}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Switch to text input mode"
+            accessibilityState={{ selected: inputMode === 'text' }}
+          >
+            <Text
+              style={[styles.modeButtonText, inputMode === 'text' && styles.modeButtonTextActive]}
             >
-              <Text style={[styles.modeButtonText, inputMode === 'text' && styles.modeButtonTextActive]}>
-                ✍️ Text
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeButton, inputMode === 'voice' && styles.modeButtonActive]}
-              onPress={toggleInputMode}
-              activeOpacity={0.7}
+              ✍️ Text
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeButton, inputMode === 'voice' && styles.modeButtonActive]}
+            onPress={toggleInputMode}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Switch to voice input mode"
+            accessibilityState={{ selected: inputMode === 'voice' }}
+          >
+            <Text
+              style={[styles.modeButtonText, inputMode === 'voice' && styles.modeButtonTextActive]}
             >
-              <Text style={[styles.modeButtonText, inputMode === 'voice' && styles.modeButtonTextActive]}>
-                🎤 Voice
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              🎤 Voice
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {/* )} */}
 
         {/* Text Input Mode */}
         {!showVoiceRecorder && (
@@ -183,6 +196,8 @@ export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
               onSubmitEditing={handleSubmit}
               returnKeyType="done"
               blurOnSubmit={false}
+              accessibilityLabel="Activity log input"
+              accessibilityHint="Enter what you are currently doing"
             />
 
             <Button
