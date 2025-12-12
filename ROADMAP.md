@@ -188,36 +188,52 @@ This roadmap breaks down the Interval MVP into actionable tasks across four phas
 
 **Goal:** Refine UX, fix bugs, optimize performance
 
-### Week 7: UX Refinement
+### Week 7: UX Refinement ✅
 
 **Tasks:**
-- [ ] Design review and iteration:
-  - [ ] Consistent spacing and typography
-  - [ ] Minimalist aesthetic enforcement
-  - [ ] Animation polish
-- [ ] Improve onboarding experience
-- [ ] Add micro-interactions:
-  - [ ] Success feedback animations
-  - [ ] Smooth transitions
-  - [ ] Haptic feedback
-- [ ] Implement settings screen:
-  - [ ] Interval adjustment
-  - [ ] Notification preferences
-  - [ ] Voice settings
-  - [ ] Export options
-- [ ] Build data export:
-  - [ ] CSV export
-  - [ ] JSON export
-  - [ ] Date range selection
-  - [ ] Share functionality
-- [ ] Add calendar view to History
-- [ ] Implement log editing
-- [ ] Add log deletion (with undo)
+- [x] Design review and iteration:
+  - [x] Consistent spacing and typography
+  - [x] Minimalist aesthetic enforcement
+  - [x] Animation polish
+- [x] Improve onboarding experience
+- [x] Add micro-interactions:
+  - [x] Success feedback animations (toast notifications)
+  - [x] Smooth transitions (fade-in animations)
+  - [ ] Haptic feedback (deferred to Week 8)
+- [x] Implement settings screen:
+  - [x] Interval adjustment
+  - [x] Notification preferences
+  - [x] Voice settings
+  - [x] Export options
+- [x] Build data export:
+  - [x] CSV export
+  - [x] JSON export
+  - [x] Date range selection
+  - [x] Share functionality
+- [x] Add calendar view to History
+  - [x] react-native-calendars integration
+  - [x] Activity heatmap with 4 intensity levels
+  - [x] Tap date to filter logs
+  - [x] Month navigation
+  - [x] View mode toggle (list/calendar)
+- [x] Implement log editing
+  - [x] EditLogModal component
+  - [x] Content editing with validation
+  - [x] Category selection
+  - [x] Metadata display
+- [x] Add log deletion
+  - [x] SwipeableRow component
+  - [x] Swipe-to-delete gesture
+  - [x] Confirmation dialog
+  - [x] Toast feedback
 
 **Deliverables:**
 - ✅ Polished, consistent UI
 - ✅ Settings fully functional
 - ✅ Data export working
+- ✅ Calendar view with heatmap
+- ✅ Edit/delete with smooth gestures
+- ✅ Loading animations throughout
 
 ---
 
