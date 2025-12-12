@@ -14,15 +14,22 @@ import {
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
 import { InsightsCharts } from '../../components/insights/InsightsCharts';
+import { SkeletonStatCard } from '../../components/common/SkeletonLoader';
+import { FadeInView } from '../../components/common/FadeInView';
 import { useInsightsStore } from '../../store/insightsStore';
 import { format } from 'date-fns';
 
 export const InsightsScreen: React.FC = () => {
   const { dailyInsight, currentStreak, fetchDailyInsight, fetchStreakData, refreshAll } = useInsightsStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    refreshAll();
+    const loadData = async () => {
+      await refreshAll();
+      setIsLoading(false);
+    };
+    loadData();
   }, []);
 
   const onRefresh = async () => {
@@ -59,10 +66,29 @@ export const InsightsScreen: React.FC = () => {
         }
       >
         <View style={styles.statsGrid}>
-          <StatCard title="Total Logs" value={totalLogs.toString()} />
-          <StatCard title="Categorized" value={categorizedLogs.toString()} />
-          <StatCard title="Completion" value={`${Math.round(completionRate * 100)}%`} />
-          <StatCard title="Streak" value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`} />
+          {isLoading ? (
+            <>
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+            </>
+          ) : (
+            <>
+              <FadeInView delay={0}>
+                <StatCard title="Total Logs" value={totalLogs.toString()} />
+              </FadeInView>
+              <FadeInView delay={50}>
+                <StatCard title="Categorized" value={categorizedLogs.toString()} />
+              </FadeInView>
+              <FadeInView delay={100}>
+                <StatCard title="Completion" value={`${Math.round(completionRate * 100)}%`} />
+              </FadeInView>
+              <FadeInView delay={150}>
+                <StatCard title="Streak" value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`} />
+              </FadeInView>
+            </>
+          )}
         </View>
 
         {topCategories.length > 0 && (

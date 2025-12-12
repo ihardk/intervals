@@ -19,6 +19,9 @@ import { TextInput } from '../../components/common/TextInput';
 import { SwipeableRow } from '../../components/common/SwipeableRow';
 import { EditLogModal } from '../../components/modals/EditLogModal';
 import { CalendarView } from '../../components/calendar/CalendarView';
+import { SkeletonList } from '../../components/common/SkeletonLoader';
+import { Toast, ToastType } from '../../components/common/Toast';
+import { FadeInView } from '../../components/common/FadeInView';
 import { useLogsStore } from '../../store/logsStore';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import type { Log } from '../../models/Log';
@@ -35,6 +38,9 @@ export const HistoryScreen: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [calendarFilteredLogs, setCalendarFilteredLogs] = useState<Log[]>([]);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<ToastType>('success');
 
   useEffect(() => {
     fetchTodayLogs();
@@ -73,6 +79,12 @@ export const HistoryScreen: React.FC = () => {
     return Array.from(cats) as string[];
   }, [logs]);
 
+  const showToast = (message: string, type: ToastType = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
   const handleDeleteLog = (log: Log) => {
     Alert.alert(
       'Delete Log',
@@ -85,8 +97,9 @@ export const HistoryScreen: React.FC = () => {
           onPress: async () => {
             try {
               await deleteLog(log.id);
+              showToast('Log deleted successfully', 'success');
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete log');
+              showToast('Failed to delete log', 'error');
             }
           },
         },
@@ -104,8 +117,10 @@ export const HistoryScreen: React.FC = () => {
       await updateLog({ id: logId, content, category });
       setEditModalVisible(false);
       setEditingLog(null);
+      showToast('Log updated successfully', 'success');
     } catch (error) {
       console.error('Failed to update log:', error);
+      showToast('Failed to update log', 'error');
       throw error;
     }
   };
@@ -150,10 +165,10 @@ export const HistoryScreen: React.FC = () => {
     const showDateHeader =
       index === 0 ||
       startOfDay(item.timestamp).getTime() !==
-        startOfDay(filteredLogs[index - 1].timestamp).getTime();
+        startOfDay(displayLogs[index - 1].timestamp).getTime();
 
     return (
-      <View>
+      <FadeInView delay={index * 50} duration={300}>
         {showDateHeader && renderDateHeader(new Date(item.timestamp))}
         <SwipeableRow
           onEdit={() => handleEditLog(item)}
@@ -180,7 +195,7 @@ export const HistoryScreen: React.FC = () => {
             )}
           </Card>
         </SwipeableRow>
-      </View>
+      </FadeInView>
     );
   };
 
@@ -281,20 +296,24 @@ export const HistoryScreen: React.FC = () => {
             </View>
           )}
 
-          <FlatList
-            data={displayLogs}
-            renderItem={renderLog}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={Colors.white}
-              />
-            }
-            ListEmptyComponent={!isLoading ? renderEmpty : null}
-          />
+          {isLoading ? (
+            <SkeletonList count={5} />
+          ) : (
+            <FlatList
+              data={displayLogs}
+              renderItem={renderLog}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={Colors.white}
+                />
+              }
+              ListEmptyComponent={renderEmpty}
+            />
+          )}
         </>
       ) : (
         <View style={styles.calendarContent}>
@@ -317,25 +336,29 @@ export const HistoryScreen: React.FC = () => {
             </View>
           )}
 
-          <FlatList
-            data={displayLogs}
-            renderItem={renderLog}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              selectedDate ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>No logs for this date</Text>
-                  <Text style={styles.emptyText}>Tap a date with activity to view logs</Text>
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyTitle}>Select a date</Text>
-                  <Text style={styles.emptyText}>Tap a date on the calendar to view logs</Text>
-                </View>
-              )
-            }
-          />
+          {isLoading ? (
+            <SkeletonList count={3} />
+          ) : (
+            <FlatList
+              data={displayLogs}
+              renderItem={renderLog}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                selectedDate ? (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyTitle}>No logs for this date</Text>
+                    <Text style={styles.emptyText}>Tap a date with activity to view logs</Text>
+                  </View>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyTitle}>Select a date</Text>
+                    <Text style={styles.emptyText}>Tap a date on the calendar to view logs</Text>
+                  </View>
+                )
+              }
+            />
+          )}
         </View>
       )}
 
@@ -346,6 +369,14 @@ export const HistoryScreen: React.FC = () => {
         onClose={handleCloseModal}
         onSave={handleSaveLog}
         availableCategories={categories}
+      />
+
+      {/* Toast Notifications */}
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
       />
     </SafeAreaView>
   );
