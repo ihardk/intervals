@@ -16,6 +16,7 @@ import {
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
 import { TextInput } from '../../components/common/TextInput';
+import { SwipeableRow } from '../../components/common/SwipeableRow';
 import { EditLogModal } from '../../components/modals/EditLogModal';
 import { useLogsStore } from '../../store/logsStore';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
@@ -134,19 +135,16 @@ export const HistoryScreen: React.FC = () => {
     return (
       <View>
         {showDateHeader && renderDateHeader(new Date(item.timestamp))}
-        <TouchableOpacity activeOpacity={0.7} onLongPress={() => handleDeleteLog(item)}>
+        <SwipeableRow
+          onEdit={() => handleEditLog(item)}
+          onDelete={() => handleDeleteLog(item)}
+        >
           <Card style={styles.logCard}>
             <View style={styles.logHeader}>
               <Text style={styles.logTime}>{format(new Date(item.timestamp), 'h:mm a')}</Text>
-              <View style={styles.logActions}>
-                {item.entryType === 'voice' && <Text style={styles.voiceIndicator}>🎤</Text>}
-                <TouchableOpacity onPress={() => handleEditLog(item)} style={styles.actionButton}>
-                  <Text style={styles.actionText}>✏️</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteLog(item)} style={styles.actionButton}>
-                  <Text style={styles.actionText}>🗑️</Text>
-                </TouchableOpacity>
-              </View>
+              {item.entryType === 'voice' && (
+                <Text style={styles.voiceIndicator}>🎤 Voice</Text>
+              )}
             </View>
             <Text style={styles.logContent}>{item.content}</Text>
             {item.category && (
@@ -161,7 +159,7 @@ export const HistoryScreen: React.FC = () => {
               </TouchableOpacity>
             )}
           </Card>
-        </TouchableOpacity>
+        </SwipeableRow>
       </View>
     );
   };
