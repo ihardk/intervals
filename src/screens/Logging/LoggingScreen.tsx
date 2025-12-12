@@ -7,12 +7,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput as RNTextInput,
   ScrollView,
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Button } from '../../components/common/Button';
 import { TextInput } from '../../components/common/TextInput';

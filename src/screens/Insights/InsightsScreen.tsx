@@ -7,7 +7,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   RefreshControl,
 } from 'react-native';
@@ -16,6 +15,7 @@ import { Card } from '../../components/common/Card';
 import { InsightsCharts } from '../../components/insights/InsightsCharts';
 import { SkeletonStatCard } from '../../components/common/SkeletonLoader';
 import { FadeInView } from '../../components/common/FadeInView';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInsightsStore } from '../../store/insightsStore';
 import { format } from 'date-fns';
 

@@ -7,12 +7,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
+
   FlatList,
   RefreshControl,
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
 import { TextInput } from '../../components/common/TextInput';

@@ -8,8 +8,8 @@ import { DEFAULT_SETTINGS } from '../../models/Settings';
 
 export interface ISettingsService {
   getSettings(): Promise<AppSettings>;
-  getSetting<T>(key: keyof AppSettings): Promise<T>;
-  setSetting<T>(key: keyof AppSettings, value: T): Promise<void>;
+  getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]>;
+  setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void>;
   updateSettings(settings: Partial<AppSettings>): Promise<void>;
   resetSettings(): Promise<void>;
   getIntervalDuration(): Promise<number>;
@@ -31,20 +31,20 @@ class SettingsService implements ISettingsService {
     return { ...DEFAULT_SETTINGS, ...settings };
   }
 
-  async getSetting<T>(key: keyof AppSettings): Promise<T> {
+  async getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
     const results = await databaseService.executeSql(
       'SELECT value, type FROM settings WHERE key = ?',
       [key]
     );
 
     if (results.length === 0) {
-      return DEFAULT_SETTINGS[key] as T;
+      return DEFAULT_SETTINGS[key];
     }
 
-    return this.parseValue(results[0].value, results[0].type) as T;
+    return this.parseValue(results[0].value, results[0].type) as AppSettings[K];
   }
 
-  async setSetting<T>(key: keyof AppSettings, value: T): Promise<void> {
+  async setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void> {
     const type = this.getSettingType(value);
     const stringValue = this.stringifyValue(value);
     const now = Date.now();
@@ -104,7 +104,7 @@ class SettingsService implements ISettingsService {
   }
 
   async getIntervalDuration(): Promise<number> {
-    return this.getSetting<number>('intervalDuration');
+    return (await this.getSetting('intervalDuration')) as number;
   }
 
   async setIntervalDuration(durationMs: number): Promise<void> {

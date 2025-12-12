@@ -3,7 +3,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Button } from '../../components/common/Button';
 import type { WelcomeScreenNavigationProp } from '../../navigation/types';

@@ -3,7 +3,8 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Button } from '../../components/common/Button';
 import { IntervalDuration } from '../../constants/intervals';

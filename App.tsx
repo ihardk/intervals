@@ -3,8 +3,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from './src/constants/colors';
 import { databaseService } from './src/services/database/DatabaseService';
 import { categoryService } from './src/services/categories/CategoryService';
@@ -12,6 +13,7 @@ import { notificationService } from './src/services/notification/NotificationSer
 import { useSettingsStore } from './src/store/settingsStore';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { navigationRef } from './src/navigation/NavigationService';
+import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 
 function App(): React.JSX.Element {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -66,33 +68,41 @@ function App(): React.JSX.Element {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>Failed to initialize app</Text>
-          <Text style={styles.errorDetails}>{error}</Text>
-        </View>
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.black} translucent={false} />
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+          <View style={styles.centered}>
+            <Text style={styles.errorText}>Failed to initialize app</Text>
+            <Text style={styles.errorDetails}>{error}</Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   if (isInitializing || !settings) {
     return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.white} />
-          <Text style={styles.loadingText}>Initializing...</Text>
-        </View>
-      </SafeAreaView>
+      <SafeAreaProvider>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.black} translucent={false} />
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={Colors.white} />
+            <Text style={styles.loadingText}>Initializing...</Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-      <AppNavigator />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.black} translucent={false} />
+        <NavigationContainer ref={navigationRef}>
+          <AppNavigator />
+        </NavigationContainer>
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 

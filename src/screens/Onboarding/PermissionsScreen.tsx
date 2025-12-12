@@ -3,7 +3,8 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/colors';
 import { Button } from '../../components/common/Button';
 import { notificationService } from '../../services/notification/NotificationService';
