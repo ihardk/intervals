@@ -16,15 +16,18 @@ import {
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
 import { TextInput } from '../../components/common/TextInput';
+import { EditLogModal } from '../../components/modals/EditLogModal';
 import { useLogsStore } from '../../store/logsStore';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import type { Log } from '../../models/Log';
 
 export const HistoryScreen: React.FC = () => {
-  const { logs, fetchTodayLogs, deleteLog, setCurrentLog, isLoading } = useLogsStore();
+  const { logs, fetchTodayLogs, deleteLog, updateLog, isLoading } = useLogsStore();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingLog, setEditingLog] = useState<Log | null>(null);
 
   useEffect(() => {
     fetchTodayLogs();
@@ -85,9 +88,24 @@ export const HistoryScreen: React.FC = () => {
   };
 
   const handleEditLog = (log: Log) => {
-    setCurrentLog(log);
-    // TODO: Navigate to edit modal
-    Alert.alert('Edit', 'Edit functionality coming soon!');
+    setEditingLog(log);
+    setEditModalVisible(true);
+  };
+
+  const handleSaveLog = async (logId: string, content: string, category?: string) => {
+    try {
+      await updateLog({ id: logId, content, category });
+      setEditModalVisible(false);
+      setEditingLog(null);
+    } catch (error) {
+      console.error('Failed to update log:', error);
+      throw error;
+    }
+  };
+
+  const handleCloseModal = () => {
+    setEditModalVisible(false);
+    setEditingLog(null);
   };
 
   const renderDateHeader = (date: Date) => {
@@ -245,6 +263,15 @@ export const HistoryScreen: React.FC = () => {
           />
         }
         ListEmptyComponent={!isLoading ? renderEmpty : null}
+      />
+
+      {/* Edit Log Modal */}
+      <EditLogModal
+        visible={editModalVisible}
+        log={editingLog}
+        onClose={handleCloseModal}
+        onSave={handleSaveLog}
+        availableCategories={categories}
       />
     </SafeAreaView>
   );
