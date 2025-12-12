@@ -18,9 +18,12 @@ import { Card } from '../../components/common/Card';
 import { TextInput } from '../../components/common/TextInput';
 import { SwipeableRow } from '../../components/common/SwipeableRow';
 import { EditLogModal } from '../../components/modals/EditLogModal';
+import { CalendarView } from '../../components/calendar/CalendarView';
 import { useLogsStore } from '../../store/logsStore';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import type { Log } from '../../models/Log';
+
+type ViewMode = 'list' | 'calendar';
 
 export const HistoryScreen: React.FC = () => {
   const { logs, fetchTodayLogs, deleteLog, updateLog, isLoading } = useLogsStore();
@@ -29,6 +32,9 @@ export const HistoryScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingLog, setEditingLog] = useState<Log | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [calendarFilteredLogs, setCalendarFilteredLogs] = useState<Log[]>([]);
 
   useEffect(() => {
     fetchTodayLogs();
@@ -107,6 +113,20 @@ export const HistoryScreen: React.FC = () => {
   const handleCloseModal = () => {
     setEditModalVisible(false);
     setEditingLog(null);
+  };
+
+  const handleCalendarDateSelect = (date: Date, logsForDay: Log[]) => {
+    setSelectedDate(date);
+    setCalendarFilteredLogs(logsForDay);
+  };
+
+  const handleToggleViewMode = () => {
+    setViewMode((prev) => (prev === 'list' ? 'calendar' : 'list'));
+    // Reset filters when switching views
+    if (viewMode === 'calendar') {
+      setSelectedDate(undefined);
+      setCalendarFilteredLogs([]);
+    }
   };
 
   const renderDateHeader = (date: Date) => {
@@ -188,80 +208,136 @@ export const HistoryScreen: React.FC = () => {
     </View>
   );
 
+  // Use calendar filtered logs if in calendar mode with a selected date
+  const displayLogs = viewMode === 'calendar' && selectedDate ? calendarFilteredLogs : filteredLogs;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>History</Text>
-        <Text style={styles.subtitle}>
-          {filteredLogs.length} of {logs.length} logs
-          {selectedCategory && ` · ${selectedCategory}`}
-        </Text>
-      </View>
-
-      <View style={styles.searchSection}>
-        <TextInput
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search logs..."
-          style={styles.searchInput}
-        />
-        {(searchQuery || selectedCategory) && (
-          <TouchableOpacity
-            onPress={() => {
-              setSearchQuery('');
-              setSelectedCategory(null);
-            }}
-            style={styles.clearSearchButton}
-          >
-            <Text style={styles.clearSearchText}>Clear</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.title}>History</Text>
+            <Text style={styles.subtitle}>
+              {displayLogs.length} of {logs.length} logs
+              {selectedCategory && ` · ${selectedCategory}`}
+              {selectedDate && ` · ${format(selectedDate, 'MMM d')}`}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={handleToggleViewMode} style={styles.viewToggle}>
+            <Text style={styles.viewToggleText}>{viewMode === 'list' ? '📅' : '📋'}</Text>
           </TouchableOpacity>
-        )}
+        </View>
       </View>
 
-      {categories.length > 0 && (
-        <View style={styles.categoriesSection}>
-          <FlatList
-            horizontal
-            data={categories}
-            keyExtractor={(item) => item}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesList}
-            renderItem={({ item }) => (
+      {viewMode === 'list' ? (
+        <>
+          <View style={styles.searchSection}>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search logs..."
+              style={styles.searchInput}
+            />
+            {(searchQuery || selectedCategory) && (
               <TouchableOpacity
-                onPress={() => setSelectedCategory(selectedCategory === item ? null : item)}
-                style={[
-                  styles.categoryFilterChip,
-                  selectedCategory === item && styles.categoryFilterChipActive,
-                ]}
+                onPress={() => {
+                  setSearchQuery('');
+                  setSelectedCategory(null);
+                }}
+                style={styles.clearSearchButton}
               >
-                <Text
-                  style={[
-                    styles.categoryFilterText,
-                    selectedCategory === item && styles.categoryFilterTextActive,
-                  ]}
-                >
-                  {item}
-                </Text>
+                <Text style={styles.clearSearchText}>Clear</Text>
               </TouchableOpacity>
             )}
+          </View>
+
+          {categories.length > 0 && (
+            <View style={styles.categoriesSection}>
+              <FlatList
+                horizontal
+                data={categories}
+                keyExtractor={(item) => item}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => setSelectedCategory(selectedCategory === item ? null : item)}
+                    style={[
+                      styles.categoryFilterChip,
+                      selectedCategory === item && styles.categoryFilterChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryFilterText,
+                        selectedCategory === item && styles.categoryFilterTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+
+          <FlatList
+            data={displayLogs}
+            renderItem={renderLog}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.white}
+              />
+            }
+            ListEmptyComponent={!isLoading ? renderEmpty : null}
+          />
+        </>
+      ) : (
+        <View style={styles.calendarContent}>
+          <View style={styles.calendarWrapper}>
+            <CalendarView onDateSelected={handleCalendarDateSelect} selectedDate={selectedDate} />
+          </View>
+
+          {selectedDate && (
+            <View style={styles.selectedDateSection}>
+              <Text style={styles.selectedDateTitle}>
+                {isToday(selectedDate)
+                  ? 'Today'
+                  : isYesterday(selectedDate)
+                  ? 'Yesterday'
+                  : format(selectedDate, 'MMMM d, yyyy')}
+              </Text>
+              <Text style={styles.selectedDateCount}>
+                {calendarFilteredLogs.length} {calendarFilteredLogs.length === 1 ? 'log' : 'logs'}
+              </Text>
+            </View>
+          )}
+
+          <FlatList
+            data={displayLogs}
+            renderItem={renderLog}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              selectedDate ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyTitle}>No logs for this date</Text>
+                  <Text style={styles.emptyText}>Tap a date with activity to view logs</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyTitle}>Select a date</Text>
+                  <Text style={styles.emptyText}>Tap a date on the calendar to view logs</Text>
+                </View>
+              )
+            }
           />
         </View>
       )}
-
-      <FlatList
-        data={filteredLogs}
-        renderItem={renderLog}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.white}
-          />
-        }
-        ListEmptyComponent={!isLoading ? renderEmpty : null}
-      />
 
       {/* Edit Log Modal */}
       <EditLogModal
@@ -286,6 +362,18 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.grey900,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  viewToggle: {
+    padding: 8,
+    marginTop: 4,
+  },
+  viewToggleText: {
+    fontSize: 24,
   },
   title: {
     fontSize: 32,
@@ -433,5 +521,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.grey300,
     fontWeight: '500',
+  },
+  calendarContent: {
+    flex: 1,
+  },
+  calendarWrapper: {
+    padding: 20,
+  },
+  selectedDateSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.grey900,
+  },
+  selectedDateTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  selectedDateCount: {
+    fontSize: 14,
+    color: Colors.grey500,
   },
 });
