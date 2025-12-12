@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { Colors } from '../../constants/colors';
+import { hapticService } from '../../services/haptics/HapticService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -31,6 +32,19 @@ export const Toast: React.FC<ToastProps> = ({
 
   useEffect(() => {
     if (visible) {
+      // Trigger haptic feedback based on toast type
+      switch (type) {
+        case 'success':
+          hapticService.success();
+          break;
+        case 'error':
+          hapticService.error();
+          break;
+        case 'info':
+          hapticService.selection();
+          break;
+      }
+
       // Show animation
       Animated.parallel([
         Animated.timing(translateY, {
@@ -54,7 +68,7 @@ export const Toast: React.FC<ToastProps> = ({
     } else {
       hideToast();
     }
-  }, [visible]);
+  }, [visible, type]);
 
   const hideToast = () => {
     Animated.parallel([

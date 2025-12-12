@@ -7,6 +7,7 @@ import React, { useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Colors } from '../../constants/colors';
+import { hapticService } from '../../services/haptics/HapticService';
 
 interface SwipeableRowProps {
   children: React.ReactNode;
@@ -38,11 +39,13 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
     });
 
     const handleEdit = () => {
+      hapticService.selection();
       swipeableRef.current?.close();
       onEdit();
     };
 
     const handleDelete = () => {
+      hapticService.delete();
       swipeableRef.current?.close();
       onDelete();
     };
@@ -86,6 +89,10 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
     );
   };
 
+  const handleSwipeableOpen = () => {
+    hapticService.selection();
+  };
+
   return (
     <GestureHandlerRootView>
       <Swipeable
@@ -94,6 +101,7 @@ export const SwipeableRow: React.FC<SwipeableRowProps> = ({
         overshootRight={false}
         friction={2}
         rightThreshold={40}
+        onSwipeableOpen={handleSwipeableOpen}
       >
         {children}
       </Swipeable>

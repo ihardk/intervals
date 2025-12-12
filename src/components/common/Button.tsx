@@ -12,6 +12,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { Colors } from '../../constants/colors';
+import { hapticService } from '../../services/haptics/HapticService';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
@@ -38,6 +39,11 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const isDisabled = disabled || loading;
 
+  const handlePress = () => {
+    hapticService.buttonPress();
+    onPress();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -47,7 +53,7 @@ export const Button: React.FC<ButtonProps> = ({
         isDisabled && styles.disabled,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.7}
     >
