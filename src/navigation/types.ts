@@ -12,8 +12,15 @@ export type RootStackParamList = {
   Permissions: undefined;
 
   // Main App
-  MainTabs: undefined;
-  Logging: { preselectedMode?: 'text' | 'voice' } | undefined;
+  MainTabs:
+    | undefined
+    | {
+        screen?: 'Capture' | 'History' | 'Insights' | 'Settings';
+        params?: {
+          preselectedMode?: 'text' | 'voice';
+        };
+      };
+  Capture: { preselectedMode?: 'text' | 'voice' } | undefined;
   History: undefined;
   Insights: undefined;
   Settings: undefined;
@@ -30,11 +37,11 @@ export type IntervalSelectionNavigationProp = StackNavigationProp<
   'IntervalSelection'
 >;
 export type PermissionsNavigationProp = StackNavigationProp<RootStackParamList, 'Permissions'>;
-export type LoggingScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Logging'>;
+export type CaptureScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Capture'>;
 export type HistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'History'>;
 export type InsightsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Insights'>;
 export type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
 // Route props
-export type LoggingScreenRouteProp = RouteProp<RootStackParamList, 'Logging'>;
+export type CaptureScreenRouteProp = RouteProp<RootStackParamList, 'Capture'>;
 export type EditLogScreenRouteProp = RouteProp<RootStackParamList, 'EditLog'>;

@@ -121,9 +121,9 @@ class NotificationScheduler {
             responseTime: now,
           });
 
-          // Navigate to logging screen
+          // Navigate to capture screen (bottom tabs)
           const mode = actionId === 'voice' ? 'voice' : 'text';
-          navigate('Logging', { preselectedMode: mode });
+          navigate('MainTabs', { screen: 'Capture', params: { preselectedMode: mode } });
         }
 
         // Check if user has skipped 3+ times recently
