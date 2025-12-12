@@ -7,6 +7,7 @@ import type { Log, CreateLogInput, UpdateLogInput } from '../models/Log';
 import { logService } from '../services/logs/LogService';
 import { categoryService } from '../services/categories/CategoryService';
 import { settingsService } from '../services/settings/SettingsService';
+import { streakService } from '../services/streaks/StreakService';
 
 interface LogsStore {
   // State
@@ -76,6 +77,9 @@ export const useLogsStore = create<LogsStore>((set, get) => ({
       }
 
       const log = await logService.createLog(input);
+
+      // Update streak
+      await streakService.updateStreak();
 
       // Add to current logs
       const currentLogs = get().logs;

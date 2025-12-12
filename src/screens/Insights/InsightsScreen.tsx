@@ -13,38 +13,31 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
-import { useLogsStore } from '../../store/logsStore';
+import { useInsightsStore } from '../../store/insightsStore';
 import { format } from 'date-fns';
 
 export const InsightsScreen: React.FC = () => {
-  const { logs, fetchTodayLogs, isLoading } = useLogsStore();
+  const { dailyInsight, currentStreak, fetchDailyInsight, fetchStreakData, refreshAll } = useInsightsStore();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchTodayLogs();
+    refreshAll();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchTodayLogs();
+    await refreshAll();
     setRefreshing(false);
   };
 
-  // Calculate basic stats
-  const totalLogs = logs.length;
-  const categorizedLogs = logs.filter((log) => log.category).length;
-  const voiceLogs = logs.filter((log) => log.entryType === 'voice').length;
+  // Get data from insight
+  const totalLogs = dailyInsight?.data.totalLogs || 0;
+  const categorizedLogs = dailyInsight?.data.topActivities.reduce((sum, act) => sum + act.count, 0) || 0;
+  const voiceLogs = 0; // TODO: Track in insights
+  const completionRate = dailyInsight?.data.completionRate || 0;
 
-  // Get top categories
-  const categoryCount: Record<string, number> = {};
-  logs.forEach((log) => {
-    if (log.category) {
-      categoryCount[log.category] = (categoryCount[log.category] || 0) + 1;
-    }
-  });
-  const topCategories = Object.entries(categoryCount)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5);
+  // Get top categories from insights
+  const topCategories = dailyInsight?.data.topActivities || [];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,24 +60,24 @@ export const InsightsScreen: React.FC = () => {
         <View style={styles.statsGrid}>
           <StatCard title="Total Logs" value={totalLogs.toString()} />
           <StatCard title="Categorized" value={categorizedLogs.toString()} />
-          <StatCard title="Voice Logs" value={voiceLogs.toString()} />
-          <StatCard title="Streak" value="1 day" />
+          <StatCard title="Completion" value={`${Math.round(completionRate * 100)}%`} />
+          <StatCard title="Streak" value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`} />
         </View>
 
         {topCategories.length > 0 && (
           <Card style={styles.section}>
             <Text style={styles.sectionTitle}>Top Activities</Text>
-            {topCategories.map(([category, count]) => (
-              <View key={category} style={styles.activityRow}>
-                <Text style={styles.activityName}>{category}</Text>
+            {topCategories.map((activity) => (
+              <View key={activity.activity} style={styles.activityRow}>
+                <Text style={styles.activityName}>{activity.activity}</Text>
                 <View style={styles.activityBar}>
                   <View
                     style={[
                       styles.activityBarFill,
-                      { width: `${(count / totalLogs) * 100}%` },
+                      { width: `${(activity.count / totalLogs) * 100}%` },
                     ]}
                   />
-                  <Text style={styles.activityCount}>{count}</Text>
+                  <Text style={styles.activityCount}>{activity.count}</Text>
                 </View>
               </View>
             ))}
