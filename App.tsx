@@ -11,13 +11,22 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { Colors } from './src/constants/colors';
 import { databaseService } from './src/services/database/DatabaseService';
 import { categoryService } from './src/services/categories/CategoryService';
+import { notificationService } from './src/services/notification/NotificationService';
+import { useSettingsStore } from './src/store/settingsStore';
+import { AppNavigator } from './src/navigation/AppNavigator';
+import { navigationRef } from './src/navigation/NavigationService';
 
 function App(): React.JSX.Element {
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialRoute, setInitialRoute] = useState<string>('Welcome');
+
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
+  const settings = useSettingsStore((state) => state.settings);
 
   useEffect(() => {
     initializeApp();
@@ -35,6 +44,14 @@ function App(): React.JSX.Element {
       await categoryService.initializeDefaultCategories();
       console.log('Categories initialized');
 
+      // Load settings
+      await loadSettings();
+      console.log('Settings loaded');
+
+      // Initialize notifications if enabled
+      await notificationService.initialize();
+      console.log('Notification service initialized');
+
       setIsInitializing(false);
     } catch (err) {
       console.error('Failed to initialize app:', err);
@@ -42,6 +59,17 @@ function App(): React.JSX.Element {
       setIsInitializing(false);
     }
   };
+
+  // Determine initial route based on onboarding status
+  useEffect(() => {
+    if (!isInitializing && settings) {
+      if (settings.onboardingCompleted) {
+        setInitialRoute('MainTabs');
+      } else {
+        setInitialRoute('Welcome');
+      }
+    }
+  }, [isInitializing, settings]);
 
   if (error) {
     return (
@@ -55,7 +83,7 @@ function App(): React.JSX.Element {
     );
   }
 
-  if (isInitializing) {
+  if (isInitializing || !settings) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
@@ -68,22 +96,10 @@ function App(): React.JSX.Element {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.black} />
-      <View style={styles.content}>
-        <Text style={styles.title}>Interval</Text>
-        <Text style={styles.subtitle}>Minimalist Awareness Logger</Text>
-        <View style={styles.statusContainer}>
-          <Text style={styles.statusText}>✓ Database initialized</Text>
-          <Text style={styles.statusText}>✓ Categories loaded</Text>
-          <Text style={styles.statusText}>✓ Ready to log</Text>
-        </View>
-        <Text style={styles.infoText}>
-          Foundation implementation complete.{'\n'}
-          Next steps: Build navigation and screens.
-        </Text>
-      </View>
-    </SafeAreaView>
+      <AppNavigator />
+    </NavigationContainer>
   );
 }
 
@@ -97,40 +113,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: Colors.white,
-    marginBottom: 8,
-    letterSpacing: -1,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.grey400,
-    marginBottom: 60,
-  },
-  statusContainer: {
-    alignItems: 'flex-start',
-    marginBottom: 40,
-  },
-  statusText: {
-    fontSize: 14,
-    color: Colors.grey300,
-    marginBottom: 8,
-    fontFamily: 'monospace',
-  },
-  infoText: {
-    fontSize: 14,
-    color: Colors.grey500,
-    textAlign: 'center',
-    lineHeight: 20,
   },
   loadingText: {
     fontSize: 16,
