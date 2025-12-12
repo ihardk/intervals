@@ -130,6 +130,14 @@ class VoiceService {
    * Start voice recording
    */
   async startRecording(callbacks: VoiceServiceCallbacks = {}): Promise<void> {
+    // Check if Voice module is available
+    if (!Voice || typeof Voice.start !== 'function') {
+      const errorMsg = 'Voice recognition is not available on this device. Please ensure @react-native-voice/voice is properly installed.';
+      console.error(errorMsg);
+      callbacks.onError?.(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -152,7 +160,9 @@ class VoiceService {
       });
     } catch (error) {
       this.isRecording = false;
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start recording';
       console.error('Start recording error:', error);
+      callbacks.onError?.(errorMessage);
       throw error;
     }
   }

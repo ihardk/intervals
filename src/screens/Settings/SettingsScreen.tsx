@@ -21,6 +21,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 import { IntervalDuration, AVAILABLE_INTERVALS } from '../../constants/intervals';
 import { exportService } from '../../services/export/ExportService';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { AppSettings } from '@/models/Settings';
 
 export const SettingsScreen: React.FC = () => {
   const { settings, loadSettings, updateSetting, isLoading } = useSettingsStore();
@@ -34,10 +35,10 @@ export const SettingsScreen: React.FC = () => {
     setLocalSettings(settings);
   }, [settings]);
 
-  const handleToggle = async (key: keyof typeof settings, value: boolean) => {
+  const handleToggle = async <K extends keyof AppSettings>(key: K, value: boolean) => {
     setLocalSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
     try {
-      await updateSetting(key as any, value);
+      await updateSetting(key, value as AppSettings[K]);
     } catch (error) {
       console.error('Failed to update setting:', error);
       // Revert on error

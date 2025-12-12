@@ -17,14 +17,38 @@ export interface ISettingsService {
 }
 
 class SettingsService implements ISettingsService {
+  // Map between camelCase (model) and snake_case (database)
+  private readonly keyMap: Record<keyof AppSettings, string> = {
+    intervalDuration: 'interval_duration',
+    notificationsEnabled: 'notifications_enabled',
+    voiceEnabled: 'voice_enabled',
+    theme: 'theme',
+    dailyReminderTime: 'daily_reminder_time',
+    autoCategorize: 'auto_categorize',
+    onboardingCompleted: 'onboarding_completed',
+  };
+
+  private readonly reverseKeyMap: Record<string, keyof AppSettings> = {
+    interval_duration: 'intervalDuration',
+    notifications_enabled: 'notificationsEnabled',
+    voice_enabled: 'voiceEnabled',
+    theme: 'theme',
+    daily_reminder_time: 'dailyReminderTime',
+    auto_categorize: 'autoCategorize',
+    onboarding_completed: 'onboardingCompleted',
+  };
+
   async getSettings(): Promise<AppSettings> {
     const results = await databaseService.executeSql('SELECT * FROM settings');
 
     const settings: Partial<AppSettings> = {};
 
     for (const row of results) {
-      const key = row.key as keyof AppSettings;
-      settings[key] = this.parseValue(row.value, row.type);
+      const dbKey = row.key as string;
+      const modelKey = this.reverseKeyMap[dbKey];
+      if (modelKey) {
+        settings[modelKey] = this.parseValue(row.value, row.type);
+      }
     }
 
     // Merge with defaults for any missing keys
@@ -32,9 +56,10 @@ class SettingsService implements ISettingsService {
   }
 
   async getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
+    const dbKey = this.keyMap[key];
     const results = await databaseService.executeSql(
       'SELECT value, type FROM settings WHERE key = ?',
-      [key]
+      [dbKey]
     );
 
     if (results.length === 0) {
@@ -45,6 +70,7 @@ class SettingsService implements ISettingsService {
   }
 
   async setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void> {
+    const dbKey = this.keyMap[key];
     const type = this.getSettingType(value);
     const stringValue = this.stringifyValue(value);
     const now = Date.now();
@@ -52,26 +78,27 @@ class SettingsService implements ISettingsService {
     // Check if setting exists
     const existing = await databaseService.executeSql(
       'SELECT key FROM settings WHERE key = ?',
-      [key]
+      [dbKey]
     );
 
     if (existing.length > 0) {
       // Update
       await databaseService.executeSql(
         'UPDATE settings SET value = ?, type = ?, updated_at = ? WHERE key = ?',
-        [stringValue, type, now, key]
+        [stringValue, type, now, dbKey]
       );
     } else {
       // Insert
       await databaseService.executeSql(
         'INSERT INTO settings (key, value, type, updated_at) VALUES (?, ?, ?, ?)',
-        [key, stringValue, type, now]
+        [dbKey, stringValue, type, now]
       );
     }
   }
 
   async updateSettings(settings: Partial<AppSettings>): Promise<void> {
-    const statements = Object.entries(settings).map(([key, value]) => {
+    const statements = Object.entries(settings).map(([modelKey, value]) => {
+      const dbKey = this.keyMap[modelKey as keyof AppSettings];
       const type = this.getSettingType(value);
       const stringValue = this.stringifyValue(value);
       const now = Date.now();
@@ -81,7 +108,7 @@ class SettingsService implements ISettingsService {
           INSERT INTO settings (key, value, type, updated_at) VALUES (?, ?, ?, ?)
           ON CONFLICT(key) DO UPDATE SET value = ?, type = ?, updated_at = ?
         `,
-        params: [key, stringValue, type, now, stringValue, type, now],
+        params: [dbKey, stringValue, type, now, stringValue, type, now],
       };
     });
 
@@ -90,13 +117,14 @@ class SettingsService implements ISettingsService {
 
   async resetSettings(): Promise<void> {
     const now = Date.now();
-    const statements = Object.entries(DEFAULT_SETTINGS).map(([key, value]) => {
+    const statements = Object.entries(DEFAULT_SETTINGS).map(([modelKey, value]) => {
+      const dbKey = this.keyMap[modelKey as keyof AppSettings];
       const type = this.getSettingType(value);
       const stringValue = this.stringifyValue(value);
 
       return {
         sql: 'UPDATE settings SET value = ?, type = ?, updated_at = ? WHERE key = ?',
-        params: [stringValue, type, now, key],
+        params: [stringValue, type, now, dbKey],
       };
     });
 
