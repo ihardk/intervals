@@ -32,8 +32,8 @@ export const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ navigation
         // Initialize notification service
         await notificationService.initialize();
 
-        // Navigate to main app
-        navigation.replace('Logging');
+        // Navigate to main app (bottom tabs -> Capture)
+        navigation.replace('MainTabs', { screen: 'Capture' });
       } else {
         Alert.alert(
           'Permissions Required',
@@ -52,7 +52,7 @@ export const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ navigation
   const handleSkip = async () => {
     Alert.alert(
       'Skip Notifications?',
-      'Without notifications, you won\'t receive regular reminders to log your activities. You can enable them later in Settings.',
+      "Without notifications, you won't receive regular reminders to log your activities. You can enable them later in Settings.",
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -63,7 +63,7 @@ export const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ navigation
               notificationsEnabled: false,
               onboardingCompleted: true,
             });
-            navigation.replace('Logging');
+            navigation.replace('MainTabs', { screen: 'Capture' });
           },
         },
       ]
@@ -75,9 +75,7 @@ export const PermissionsScreen: React.FC<PermissionsScreenProps> = ({ navigation
       <View style={styles.content}>
         <View>
           <Text style={styles.title}>Enable Notifications</Text>
-          <Text style={styles.subtitle}>
-            Interval works best with regular reminders
-          </Text>
+          <Text style={styles.subtitle}>Interval works best with regular reminders</Text>
 
           <View style={styles.benefits}>
             <BenefitItem text="Receive gentle reminders every 15 or 30 minutes" />

@@ -17,15 +17,15 @@ import { Button } from '../../components/common/Button';
 import { TextInput } from '../../components/common/TextInput';
 import { Card } from '../../components/common/Card';
 import { useLogsStore } from '../../store/logsStore';
-import type { LoggingScreenNavigationProp, LoggingScreenRouteProp } from '../../navigation/types';
+import type { CaptureScreenNavigationProp, CaptureScreenRouteProp } from '../../navigation/types';
 import { format } from 'date-fns';
 
-interface LoggingScreenProps {
-  navigation: LoggingScreenNavigationProp;
-  route: LoggingScreenRouteProp;
+interface CaptureScreenProps {
+  navigation: CaptureScreenNavigationProp;
+  route: CaptureScreenRouteProp;
 }
 
-export const LoggingScreen: React.FC<LoggingScreenProps> = ({ route }) => {
+export const CaptureScreen: React.FC<CaptureScreenProps> = ({ route }) => {
   const [logContent, setLogContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<RNTextInput>(null);
@@ -45,7 +45,7 @@ export const LoggingScreen: React.FC<LoggingScreenProps> = ({ route }) => {
 
   const handleSubmit = async () => {
     if (!logContent.trim()) {
-      Alert.alert('Empty Log', 'Please enter what you\'re doing.');
+      Alert.alert('Empty Log', "Please enter what you're doing.");
       return;
     }
 
@@ -117,9 +117,7 @@ export const LoggingScreen: React.FC<LoggingScreenProps> = ({ route }) => {
             <Text style={styles.sectionTitle}>Recent Logs</Text>
             {recentLogs.map((log) => (
               <Card key={log.id} style={styles.logCard}>
-                <Text style={styles.logTime}>
-                  {format(new Date(log.timestamp), 'h:mm a')}
-                </Text>
+                <Text style={styles.logTime}>{format(new Date(log.timestamp), 'h:mm a')}</Text>
                 <Text style={styles.logContent}>{log.content}</Text>
                 {log.category && (
                   <View style={styles.categoryBadge}>
@@ -138,9 +136,7 @@ export const LoggingScreen: React.FC<LoggingScreenProps> = ({ route }) => {
         {!isLoading && logs.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>No logs yet today.</Text>
-            <Text style={styles.emptySubtext}>
-              Start by logging your current activity above.
-            </Text>
+            <Text style={styles.emptySubtext}>Start by logging your current activity above.</Text>
           </View>
         )}
       </ScrollView>

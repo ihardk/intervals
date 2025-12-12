@@ -14,7 +14,7 @@ import { IntervalSelectionScreen } from '../screens/Onboarding/IntervalSelection
 import { PermissionsScreen } from '../screens/Onboarding/PermissionsScreen';
 
 // Main Screens
-import { LoggingScreen } from '../screens/Logging/LoggingScreen';
+import { CaptureScreen } from '../screens/Logging/LoggingScreen';
 import { HistoryScreen } from '../screens/History/HistoryScreen';
 import { InsightsScreen } from '../screens/Insights/InsightsScreen';
 import { SettingsScreen } from '../screens/Settings/SettingsScreen';
@@ -44,8 +44,8 @@ const MainTabs = () => {
       }}
     >
       <Tab.Screen
-        name="Logging"
-        component={LoggingScreen}
+        name="Capture"
+        component={CaptureScreen}
         options={{
           tabBarLabel: 'Log',
           tabBarIcon: ({ color }) => <TabIcon label="+" color={color} />,
