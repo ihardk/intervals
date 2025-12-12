@@ -15,8 +15,11 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
+import { Button } from '../../components/common/Button';
 import { useSettingsStore } from '../../store/settingsStore';
 import { IntervalDuration, AVAILABLE_INTERVALS } from '../../constants/intervals';
+import { exportService } from '../../services/export/ExportService';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export const SettingsScreen: React.FC = () => {
   const { settings, loadSettings, updateSetting, isLoading } = useSettingsStore();
@@ -71,6 +74,72 @@ export const SettingsScreen: React.FC = () => {
         },
       ]
     );
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const now = new Date();
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+
+      Alert.alert('Exporting...', 'Please wait while we export your data');
+
+      const filePath = await exportService.exportToCSV(start, end);
+
+      Alert.alert(
+        'Export Complete',
+        `Your data has been exported to CSV.\n\nFile: ${filePath.split('/').pop()}`,
+        [
+          { text: 'OK' },
+          {
+            text: 'Share',
+            onPress: async () => {
+              try {
+                await exportService.shareExport(filePath);
+              } catch (error) {
+                Alert.alert('Error', 'Failed to share export');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to export data');
+      console.error('Export error:', error);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      const now = new Date();
+      const start = startOfMonth(now);
+      const end = endOfMonth(now);
+
+      Alert.alert('Exporting...', 'Please wait while we export your data');
+
+      const filePath = await exportService.exportToJSON(start, end);
+
+      Alert.alert(
+        'Export Complete',
+        `Your data has been exported to JSON.\n\nFile: ${filePath.split('/').pop()}`,
+        [
+          { text: 'OK' },
+          {
+            text: 'Share',
+            onPress: async () => {
+              try {
+                await exportService.shareExport(filePath);
+              } catch (error) {
+                Alert.alert('Error', 'Failed to share export');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to export data');
+      console.error('Export error:', error);
+    }
   };
 
   if (isLoading || !localSettings) {
@@ -134,6 +203,26 @@ export const SettingsScreen: React.FC = () => {
             value={localSettings.autoCategorize}
             onValueChange={(value) => handleToggle('autoCategorize', value)}
           />
+        </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Data Export</Text>
+          <Text style={styles.sectionDescription}>Export your logs from this month</Text>
+
+          <View style={styles.exportButtons}>
+            <Button
+              title="Export to CSV"
+              onPress={handleExportCSV}
+              variant="secondary"
+              fullWidth
+            />
+            <Button
+              title="Export to JSON"
+              onPress={handleExportJSON}
+              variant="secondary"
+              fullWidth
+            />
+          </View>
         </Card>
 
         <Card style={styles.section}>
@@ -208,6 +297,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: Colors.grey600,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  exportButtons: {
+    gap: 12,
   },
   settingRow: {
     flexDirection: 'row',

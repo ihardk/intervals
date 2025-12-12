@@ -2,7 +2,7 @@
  * History Screen - View all logged activities
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,20 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
+import { TextInput } from '../../components/common/TextInput';
 import { useLogsStore } from '../../store/logsStore';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import type { Log } from '../../models/Log';
 
 export const HistoryScreen: React.FC = () => {
-  const { logs, fetchTodayLogs, isLoading } = useLogsStore();
+  const { logs, fetchTodayLogs, deleteLog, setCurrentLog, isLoading } = useLogsStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTodayLogs();
@@ -30,6 +34,60 @@ export const HistoryScreen: React.FC = () => {
     setRefreshing(true);
     await fetchTodayLogs();
     setRefreshing(false);
+  };
+
+  // Filter logs based on search and category
+  const filteredLogs = useMemo(() => {
+    let filtered = logs;
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((log) =>
+        log.content.toLowerCase().includes(query) ||
+        log.category?.toLowerCase().includes(query)
+      );
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter((log) => log.category === selectedCategory);
+    }
+
+    return filtered;
+  }, [logs, searchQuery, selectedCategory]);
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(logs.map((log) => log.category).filter(Boolean));
+    return Array.from(cats) as string[];
+  }, [logs]);
+
+  const handleDeleteLog = (log: Log) => {
+    Alert.alert(
+      'Delete Log',
+      'Are you sure you want to delete this log?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteLog(log.id);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete log');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEditLog = (log: Log) => {
+    setCurrentLog(log);
+    // TODO: Navigate to edit modal
+    Alert.alert('Edit', 'Edit functionality coming soon!');
   };
 
   const renderDateHeader = (date: Date) => {
@@ -53,22 +111,36 @@ export const HistoryScreen: React.FC = () => {
     const showDateHeader =
       index === 0 ||
       startOfDay(item.timestamp).getTime() !==
-        startOfDay(logs[index - 1].timestamp).getTime();
+        startOfDay(filteredLogs[index - 1].timestamp).getTime();
 
     return (
       <View>
         {showDateHeader && renderDateHeader(new Date(item.timestamp))}
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onLongPress={() => handleDeleteLog(item)}>
           <Card style={styles.logCard}>
             <View style={styles.logHeader}>
               <Text style={styles.logTime}>{format(new Date(item.timestamp), 'h:mm a')}</Text>
-              {item.entryType === 'voice' && <Text style={styles.voiceIndicator}>🎤</Text>}
+              <View style={styles.logActions}>
+                {item.entryType === 'voice' && <Text style={styles.voiceIndicator}>🎤</Text>}
+                <TouchableOpacity onPress={() => handleEditLog(item)} style={styles.actionButton}>
+                  <Text style={styles.actionText}>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeleteLog(item)} style={styles.actionButton}>
+                  <Text style={styles.actionText}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <Text style={styles.logContent}>{item.content}</Text>
             {item.category && (
-              <View style={styles.categoryBadge}>
+              <TouchableOpacity
+                onPress={() => setSelectedCategory(selectedCategory === item.category ? null : item.category!)}
+                style={[
+                  styles.categoryBadge,
+                  selectedCategory === item.category && styles.categoryBadgeActive,
+                ]}
+              >
                 <Text style={styles.categoryText}>{item.category}</Text>
-              </View>
+              </TouchableOpacity>
             )}
           </Card>
         </TouchableOpacity>
@@ -78,10 +150,25 @@ export const HistoryScreen: React.FC = () => {
 
   const renderEmpty = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyTitle}>No logs yet</Text>
-      <Text style={styles.emptyText}>
-        Start logging your activities to build your history
+      <Text style={styles.emptyTitle}>
+        {searchQuery || selectedCategory ? 'No logs match your search' : 'No logs yet'}
       </Text>
+      <Text style={styles.emptyText}>
+        {searchQuery || selectedCategory
+          ? 'Try adjusting your search or filters'
+          : 'Start logging your activities to build your history'}
+      </Text>
+      {(searchQuery || selectedCategory) && (
+        <TouchableOpacity
+          onPress={() => {
+            setSearchQuery('');
+            setSelectedCategory(null);
+          }}
+          style={styles.clearButton}
+        >
+          <Text style={styles.clearButtonText}>Clear filters</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -89,11 +176,64 @@ export const HistoryScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>History</Text>
-        <Text style={styles.subtitle}>{logs.length} logs today</Text>
+        <Text style={styles.subtitle}>
+          {filteredLogs.length} of {logs.length} logs
+          {selectedCategory && ` · ${selectedCategory}`}
+        </Text>
       </View>
 
+      <View style={styles.searchSection}>
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search logs..."
+          style={styles.searchInput}
+        />
+        {(searchQuery || selectedCategory) && (
+          <TouchableOpacity
+            onPress={() => {
+              setSearchQuery('');
+              setSelectedCategory(null);
+            }}
+            style={styles.clearSearchButton}
+          >
+            <Text style={styles.clearSearchText}>Clear</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {categories.length > 0 && (
+        <View style={styles.categoriesSection}>
+          <FlatList
+            horizontal
+            data={categories}
+            keyExtractor={(item) => item}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesList}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => setSelectedCategory(selectedCategory === item ? null : item)}
+                style={[
+                  styles.categoryFilterChip,
+                  selectedCategory === item && styles.categoryFilterChipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryFilterText,
+                    selectedCategory === item && styles.categoryFilterTextActive,
+                  ]}
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
       <FlatList
-        data={logs}
+        data={filteredLogs}
         renderItem={renderLog}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -132,6 +272,53 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.grey500,
   },
+  searchSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 44,
+  },
+  clearSearchButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  clearSearchText: {
+    fontSize: 14,
+    color: Colors.grey400,
+    fontWeight: '500',
+  },
+  categoriesSection: {
+    paddingBottom: 12,
+  },
+  categoriesList: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  categoryFilterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: Colors.grey900,
+    borderWidth: 1,
+    borderColor: Colors.grey700,
+  },
+  categoryFilterChipActive: {
+    backgroundColor: Colors.white,
+    borderColor: Colors.white,
+  },
+  categoryFilterText: {
+    fontSize: 14,
+    color: Colors.grey300,
+    fontWeight: '500',
+  },
+  categoryFilterTextActive: {
+    color: Colors.black,
+  },
   listContent: {
     padding: 20,
   },
@@ -158,6 +345,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.grey500,
   },
+  logActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
+  },
+  actionText: {
+    fontSize: 16,
+  },
   voiceIndicator: {
     fontSize: 16,
   },
@@ -173,6 +371,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     marginTop: 8,
+  },
+  categoryBadgeActive: {
+    backgroundColor: Colors.white,
   },
   categoryText: {
     fontSize: 12,
@@ -193,5 +394,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.grey600,
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  clearButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: Colors.grey900,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.grey700,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: Colors.grey300,
+    fontWeight: '500',
   },
 });
