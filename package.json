@@ -28,7 +28,9 @@
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.8.0",
     "react-native-sqlite-storage": "^6.0.1",
+    "react-native-svg": "^15.10.0",
     "uuid": "^9.0.1",
+    "victory-native": "^37.3.2",
     "zustand": "^4.4.7"
   },
   "devDependencies": {

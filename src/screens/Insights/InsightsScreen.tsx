@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Card } from '../../components/common/Card';
+import { InsightsCharts } from '../../components/insights/InsightsCharts';
 import { useInsightsStore } from '../../store/insightsStore';
 import { format } from 'date-fns';
 
@@ -84,22 +85,19 @@ export const InsightsScreen: React.FC = () => {
           </Card>
         )}
 
+        {/* Advanced Charts */}
+        {totalLogs > 0 && (
+          <InsightsCharts dailyInsight={dailyInsight} />
+        )}
+
         {totalLogs === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No data yet</Text>
             <Text style={styles.emptyText}>
-              Start logging your activities to see insights
+              Start logging your activities to see insights and visualizations
             </Text>
           </View>
         )}
-
-        <Text style={styles.comingSoon}>
-          More insights coming soon:{'\n'}
-          • Completion rate{'\n'}
-          • Peak hours{'\n'}
-          • Productivity patterns{'\n'}
-          • Weekly & monthly views
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -217,12 +215,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.grey600,
     textAlign: 'center',
-  },
-  comingSoon: {
-    fontSize: 14,
-    color: Colors.grey600,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: 20,
   },
 });
