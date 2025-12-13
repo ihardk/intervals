@@ -9,6 +9,7 @@ class GetTopActivities {
   GetTopActivities(this.repository);
 
   Future<Either<Failure, List<ActivityCount>>> call(DateTime date) async {
-    throw UnimplementedError();
+    final result = await repository.generateDailyInsight(date);
+    return result.map((insight) => insight.data.topActivities);
   }
 }

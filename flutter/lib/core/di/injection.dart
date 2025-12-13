@@ -29,6 +29,23 @@ import '../../features/streaks/domain/repositories/streak_repository.dart';
 import '../../features/export/data/repositories/export_repository_impl.dart';
 import '../../features/export/domain/repositories/export_repository.dart';
 
+// Use Case Imports
+import '../../features/categories/domain/usecases/get_all_categories.dart';
+import '../../features/categories/domain/usecases/create_category.dart';
+import '../../features/categories/domain/usecases/update_category.dart';
+import '../../features/categories/domain/usecases/delete_category.dart';
+import '../../features/categories/domain/usecases/categorize_log.dart';
+
+import '../../features/insights/domain/usecases/generate_daily_insight.dart';
+import '../../features/insights/domain/usecases/get_top_activities.dart';
+import '../../features/insights/domain/usecases/calculate_completion_rate.dart';
+
+import '../../features/streaks/domain/usecases/get_current_streak.dart';
+import '../../features/streaks/domain/usecases/update_streak.dart';
+
+import '../../features/export/domain/usecases/export_to_csv.dart';
+import '../../features/export/domain/usecases/export_to_json.dart';
+
 /// Service Locator instance
 final sl = GetIt.instance;
 
@@ -115,6 +132,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateIntervalDuration(sl()));
   sl.registerLazySingleton(() => ToggleNotifications(sl()));
   sl.registerLazySingleton(() => CompleteOnboarding(sl()));
+
+  // Categories Use Cases
+  sl.registerLazySingleton(() => GetAllCategories(sl()));
+  sl.registerLazySingleton(() => CreateCategory(sl()));
+  sl.registerLazySingleton(() => UpdateCategory(sl()));
+  sl.registerLazySingleton(() => DeleteCategory(sl()));
+  sl.registerLazySingleton(() => CategorizeLog(sl()));
+
+  // Insights Use Cases
+  sl.registerLazySingleton(() => GenerateDailyInsight(sl()));
+  sl.registerLazySingleton(() => GetTopActivities(sl()));
+  sl.registerLazySingleton(() => CalculateCompletionRate(sl()));
+
+  // Streaks Use Cases
+  sl.registerLazySingleton(() => GetCurrentStreak(sl()));
+  sl.registerLazySingleton(() => UpdateStreak(sl()));
+
+  // Export Use Cases
+  sl.registerLazySingleton(() => ExportToCSV(sl()));
+  sl.registerLazySingleton(() => ExportToJSON(sl()));
 
   // ============== BLOCS ==============
   // Registered as factories so each screen gets a new instance

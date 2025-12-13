@@ -8,7 +8,7 @@ class GenerateDailyInsight {
 
   GenerateDailyInsight(this.repository);
 
-  Future<Either<Failure, Insight>> call(DateTime date) async {
-    throw UnimplementedError();
+  Future<Either<Failure, Insight>> call(DateTime date) {
+    return repository.generateDailyInsight(date);
   }
 }

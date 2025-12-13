@@ -8,6 +8,7 @@ class CalculateCompletionRate {
   CalculateCompletionRate(this.repository);
 
   Future<Either<Failure, double>> call(DateTime date) async {
-    throw UnimplementedError();
+    final result = await repository.generateDailyInsight(date);
+    return result.map((insight) => insight.data.completionRate);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:interval/core/errors/failures.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:interval/features/insights/domain/entities/insight.dart';
@@ -45,7 +46,10 @@ void main() {
       final result = await usecase(tDate);
 
       // Assert
-      expect(result, Right(tActivities));
+      result.fold(
+        (l) => fail('Should be Right'),
+        (r) => expect(r, tActivities),
+      );
       verify(mockInsightRepository.generateDailyInsight(tDate));
       verifyNoMoreInteractions(mockInsightRepository);
     },
