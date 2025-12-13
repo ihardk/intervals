@@ -14,6 +14,12 @@ import '../../features/logging/domain/usecases/create_interval.dart';
 import '../../features/logging/domain/usecases/complete_interval.dart';
 import '../../features/logging/domain/usecases/get_today_completion_rate.dart';
 import '../../features/logging/presentation/bloc/logging_bloc.dart';
+import '../../features/history/presentation/bloc/history_bloc.dart';
+import '../../features/insights/presentation/bloc/insights_bloc.dart';
+import '../../features/settings/presentation/bloc/settings_bloc.dart';
+import '../../features/streaks/presentation/bloc/streaks_bloc.dart';
+import '../../features/export/presentation/bloc/export_bloc.dart';
+import '../../features/categories/presentation/bloc/categories_bloc.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/get_app_settings.dart';
@@ -28,6 +34,12 @@ import '../../features/streaks/data/repositories/streak_repository_impl.dart';
 import '../../features/streaks/domain/repositories/streak_repository.dart';
 import '../../features/export/data/repositories/export_repository_impl.dart';
 import '../../features/export/domain/repositories/export_repository.dart';
+import '../../features/voice/data/repositories/voice_repository_impl.dart';
+import '../../features/voice/domain/repositories/voice_repository.dart';
+import '../../features/voice/presentation/bloc/voice_bloc.dart';
+
+import '../../features/settings/domain/usecases/toggle_voice.dart';
+import '../../features/settings/domain/usecases/toggle_auto_categorize.dart';
 
 // Use Case Imports
 import '../../features/categories/domain/usecases/get_all_categories.dart';
@@ -132,6 +144,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => UpdateIntervalDuration(sl()));
   sl.registerLazySingleton(() => ToggleNotifications(sl()));
   sl.registerLazySingleton(() => CompleteOnboarding(sl()));
+  sl.registerLazySingleton(() => ToggleVoiceUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleAutoCategorizeUseCase(sl()));
 
   // Categories Use Cases
   sl.registerLazySingleton(() => GetAllCategories(sl()));
@@ -156,18 +170,57 @@ Future<void> init() async {
   // ============== BLOCS ==============
   // Registered as factories so each screen gets a new instance
   sl.registerFactory(() => LoggingBloc(
-    createLog: sl(),
-    getTodayLogs: sl(),
-    updateLog: sl(),
-    deleteLog: sl(),
-    searchLogs: sl(),
-  ));
+        createLog: sl(),
+        getTodayLogs: sl(),
+        updateLog: sl(),
+        deleteLog: sl(),
+        searchLogs: sl(),
+      ));
 
-  // TODO: Add more Bloc registrations as they're created
-  // - HistoryBloc
-  // - InsightsBloc
-  // - SettingsBloc
-  // - OnboardingBloc
+  sl.registerFactory(() => HistoryBloc(
+        getLogsByDateRange: sl(),
+        searchLogs: sl(),
+      ));
+
+  sl.registerFactory(() => InsightsBloc(
+        generateDailyInsight: sl(),
+        getTopActivities: sl(),
+        calculateCompletionRate: sl(),
+      ));
+
+  sl.registerFactory(() => SettingsBloc(
+        getAppSettings: sl(),
+        updateIntervalDuration: sl(),
+        toggleNotifications: sl(),
+        completeOnboarding: sl(),
+        toggleVoice: sl(),
+        toggleAutoCategorize: sl(),
+      ));
+
+  sl.registerFactory(() => StreaksBloc(
+        getCurrentStreak: sl(),
+      ));
+
+  sl.registerFactory(() => ExportBloc(
+        exportToCSV: sl(),
+        exportToJSON: sl(),
+      ));
+
+  sl.registerFactory(() => CategoriesBloc(
+        getAllCategories: sl(),
+        createCategory: sl(),
+        updateCategory: sl(),
+        deleteCategory: sl(),
+      ));
+
+  sl.registerFactory(() => VoiceBloc(
+        sl(),
+      ));
+
+  // Singleton instance
+  sl.registerLazySingleton<VoiceRepository>(
+    () => VoiceRepositoryImpl(),
+  );
 }
 
 /// Reset all dependencies (useful for testing)

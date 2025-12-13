@@ -10,16 +10,26 @@ import 'package:interval/features/logging/domain/entities/log.dart';
 import 'package:interval/features/logging/domain/usecases/get_logs_by_date_range.dart';
 import 'package:interval/core/errors/failures.dart';
 
-@GenerateMocks([GetLogsByDateRange])
+import 'package:interval/features/logging/domain/usecases/search_logs.dart';
+
+@GenerateMocks([
+  GetLogsByDateRange,
+  SearchLogs,
+])
 import 'history_bloc_test.mocks.dart';
 
 void main() {
   late HistoryBloc bloc;
   late MockGetLogsByDateRange mockGetLogsByDateRange;
+  late MockSearchLogs mockSearchLogs;
 
   setUp(() {
     mockGetLogsByDateRange = MockGetLogsByDateRange();
-    bloc = HistoryBloc(getLogsByDateRange: mockGetLogsByDateRange);
+    mockSearchLogs = MockSearchLogs();
+    bloc = HistoryBloc(
+      getLogsByDateRange: mockGetLogsByDateRange,
+      searchLogs: mockSearchLogs,
+    );
   });
 
   final tStartDate = DateTime(2025, 1, 1);
@@ -54,7 +64,11 @@ void main() {
     )),
     expect: () => [
       const HistoryState.loading(),
-      HistoryState.loaded(tLogs),
+      HistoryState.loaded(
+        logs: tLogs,
+        startDate: tStartDate,
+        endDate: tEndDate,
+      ),
     ],
     verify: (_) {
       verify(mockGetLogsByDateRange(

@@ -1,8 +1,4 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import '../constants/app_constants.dart';
 import '../constants/intervals.dart';
 import 'tables/logs_table.dart';
@@ -19,6 +15,7 @@ import 'daos/intervals_dao.dart';
 import 'daos/insights_dao.dart';
 import 'daos/streaks_dao.dart';
 import 'daos/exports_dao.dart';
+import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
@@ -45,7 +42,7 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(impl.connect());
 
   /// Test constructor for in-memory database
   AppDatabase.test(QueryExecutor executor) : super(executor);
@@ -131,7 +128,8 @@ class AppDatabase extends _$AppDatabase {
           id: 'cat_work',
           name: 'Work',
           color: const Value('#3B82F6'),
-          keywords: '["coding", "meeting", "email", "project", "client", "work"]',
+          keywords:
+              '["coding", "meeting", "email", "project", "client", "work"]',
           isSystem: const Value(1),
           createdAt: now,
           updatedAt: now,
@@ -149,7 +147,8 @@ class AppDatabase extends _$AppDatabase {
           id: 'cat_learning',
           name: 'Learning',
           color: const Value('#8B5CF6'),
-          keywords: '["reading", "course", "tutorial", "studying", "research", "learning"]',
+          keywords:
+              '["reading", "course", "tutorial", "studying", "research", "learning"]',
           isSystem: const Value(1),
           createdAt: now,
           updatedAt: now,
@@ -158,7 +157,8 @@ class AppDatabase extends _$AppDatabase {
           id: 'cat_social',
           name: 'Social',
           color: const Value('#F59E0B'),
-          keywords: '["chat", "call", "social media", "messaging", "conversation"]',
+          keywords:
+              '["chat", "call", "social media", "messaging", "conversation"]',
           isSystem: const Value(1),
           createdAt: now,
           updatedAt: now,
@@ -167,7 +167,8 @@ class AppDatabase extends _$AppDatabase {
           id: 'cat_distraction',
           name: 'Distraction',
           color: const Value('#EF4444'),
-          keywords: '["browsing", "youtube", "scrolling", "distracted", "procrastinating"]',
+          keywords:
+              '["browsing", "youtube", "scrolling", "distracted", "procrastinating"]',
           isSystem: const Value(1),
           createdAt: now,
           updatedAt: now,
@@ -175,13 +176,4 @@ class AppDatabase extends _$AppDatabase {
       ]);
     });
   }
-}
-
-/// Open database connection
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, AppConstants.databaseName));
-    return NativeDatabase(file);
-  });
 }

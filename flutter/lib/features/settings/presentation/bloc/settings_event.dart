@@ -8,5 +8,8 @@ class SettingsEvent with _$SettingsEvent {
   const factory SettingsEvent.updateInterval(int durationMs) = UpdateInterval;
   const factory SettingsEvent.toggleNotifications(bool enabled) =
       ToggleNotifications;
+  const factory SettingsEvent.toggleVoice(bool enabled) = ToggleVoice;
+  const factory SettingsEvent.toggleAutoCategorize(bool enabled) =
+      ToggleAutoCategorize;
   const factory SettingsEvent.completeOnboarding() = CompleteOnboarding;
 }

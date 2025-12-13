@@ -30,7 +30,7 @@ dependencies:
 
   # Voice & Audio
   speech_to_text: ^6.6.0
-  record: ^5.0.4
+  record: 5.0.4
   audioplayers: ^5.2.1
   permission_handler: ^11.2.0
 
@@ -74,6 +74,10 @@ dev_dependencies:
 
   # Linting
   flutter_lints: ^3.0.0
+
+dependency_overrides:
+  # Pin record_platform_interface to version compatible with record_linux 0.7.2
+  record_platform_interface: 1.2.0
 
 flutter:
   uses-material-design: true

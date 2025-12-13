@@ -15,11 +15,16 @@ import 'package:interval/features/settings/presentation/bloc/settings_bloc.dart'
 import 'package:interval/features/settings/presentation/bloc/settings_event.dart';
 import 'package:interval/features/settings/presentation/bloc/settings_state.dart';
 
+import 'package:interval/features/settings/domain/usecases/toggle_voice.dart';
+import 'package:interval/features/settings/domain/usecases/toggle_auto_categorize.dart';
+
 @GenerateMocks([
   GetAppSettings,
   UpdateIntervalDuration,
   usecase.ToggleNotifications,
-  usecase.CompleteOnboarding
+  usecase.CompleteOnboarding,
+  ToggleVoiceUseCase,
+  ToggleAutoCategorizeUseCase,
 ])
 import 'settings_bloc_test.mocks.dart';
 
@@ -29,18 +34,24 @@ void main() {
   late MockUpdateIntervalDuration mockUpdateIntervalDuration;
   late MockToggleNotifications mockToggleNotifications;
   late MockCompleteOnboarding mockCompleteOnboarding;
+  late MockToggleVoiceUseCase mockToggleVoiceUseCase;
+  late MockToggleAutoCategorizeUseCase mockToggleAutoCategorizeUseCase;
 
   setUp(() {
     mockGetAppSettings = MockGetAppSettings();
     mockUpdateIntervalDuration = MockUpdateIntervalDuration();
     mockToggleNotifications = MockToggleNotifications();
     mockCompleteOnboarding = MockCompleteOnboarding();
+    mockToggleVoiceUseCase = MockToggleVoiceUseCase();
+    mockToggleAutoCategorizeUseCase = MockToggleAutoCategorizeUseCase();
 
     bloc = SettingsBloc(
       getAppSettings: mockGetAppSettings,
       updateIntervalDuration: mockUpdateIntervalDuration,
       toggleNotifications: mockToggleNotifications,
       completeOnboarding: mockCompleteOnboarding,
+      toggleVoice: mockToggleVoiceUseCase,
+      toggleAutoCategorize: mockToggleAutoCategorizeUseCase,
     );
   });
 

@@ -5,15 +5,16 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:interval/main.dart';
+import 'package:interval/shared/navigation/app_router.dart';
 
 void main() {
-  testWidgets('App launches with placeholder screen', (WidgetTester tester) async {
+  testWidgets('App launches with placeholder screen',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const IntervalApp());
+    await tester.pumpWidget(IntervalApp(router: createAppRouter(true)));
 
     // Verify that the placeholder screen shows
     expect(find.text('Interval'), findsOneWidget);

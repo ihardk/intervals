@@ -15,8 +15,12 @@ import 'package:interval/features/settings/domain/usecases/complete_onboarding.d
     as _i10;
 import 'package:interval/features/settings/domain/usecases/get_app_settings.dart'
     as _i4;
+import 'package:interval/features/settings/domain/usecases/toggle_auto_categorize.dart'
+    as _i12;
 import 'package:interval/features/settings/domain/usecases/toggle_notifications.dart'
     as _i9;
+import 'package:interval/features/settings/domain/usecases/toggle_voice.dart'
+    as _i11;
 import 'package:interval/features/settings/domain/usecases/update_interval_duration.dart'
     as _i8;
 import 'package:mockito/mockito.dart' as _i1;
@@ -192,6 +196,78 @@ class MockCompleteOnboarding extends _i1.Mock
           Invocation.method(
             #call,
             [],
+          ),
+        )),
+      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+}
+
+/// A class which mocks [ToggleVoiceUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockToggleVoiceUseCase extends _i1.Mock
+    implements _i11.ToggleVoiceUseCase {
+  MockToggleVoiceUseCase() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.SettingsRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeSettingsRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.SettingsRepository);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, void>> call(bool? isEnabled) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [isEnabled],
+        ),
+        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
+            _FakeEither_1<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #call,
+            [isEnabled],
+          ),
+        )),
+      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+}
+
+/// A class which mocks [ToggleAutoCategorizeUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockToggleAutoCategorizeUseCase extends _i1.Mock
+    implements _i12.ToggleAutoCategorizeUseCase {
+  MockToggleAutoCategorizeUseCase() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.SettingsRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeSettingsRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.SettingsRepository);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, void>> call(bool? isEnabled) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [isEnabled],
+        ),
+        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
+            _FakeEither_1<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #call,
+            [isEnabled],
           ),
         )),
       ) as _i5.Future<_i3.Either<_i6.Failure, void>>);

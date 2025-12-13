@@ -12,6 +12,8 @@ import 'package:interval/features/logging/domain/repositories/log_repository.dar
     as _i2;
 import 'package:interval/features/logging/domain/usecases/get_logs_by_date_range.dart'
     as _i4;
+import 'package:interval/features/logging/domain/usecases/search_logs.dart'
+    as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -89,6 +91,41 @@ class MockGetLogsByDateRange extends _i1.Mock
               #startTimestamp: startTimestamp,
               #endTimestamp: endTimestamp,
             },
+          ),
+        )),
+      ) as _i5.Future<_i3.Either<_i6.Failure, List<_i7.Log>>>);
+}
+
+/// A class which mocks [SearchLogs].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSearchLogs extends _i1.Mock implements _i8.SearchLogs {
+  MockSearchLogs() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.LogRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeLogRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.LogRepository);
+
+  @override
+  _i5.Future<_i3.Either<_i6.Failure, List<_i7.Log>>> call(String? query) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [query],
+        ),
+        returnValue: _i5.Future<_i3.Either<_i6.Failure, List<_i7.Log>>>.value(
+            _FakeEither_1<_i6.Failure, List<_i7.Log>>(
+          this,
+          Invocation.method(
+            #call,
+            [query],
           ),
         )),
       ) as _i5.Future<_i3.Either<_i6.Failure, List<_i7.Log>>>);

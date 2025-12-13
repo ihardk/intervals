@@ -8,6 +8,8 @@ class HistoryEvent with _$HistoryEvent {
     required DateTime startDate,
     required DateTime endDate,
   }) = LoadHistory;
-  
+
   const factory HistoryEvent.refreshHistory() = RefreshHistory;
+  const factory HistoryEvent.searchHistory(String query) = SearchHistory;
+  const factory HistoryEvent.filterHistory({String? category}) = FilterHistory;
 }

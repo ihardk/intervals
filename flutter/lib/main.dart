@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'core/di/injection.dart' as di;
 import 'core/theme/app_theme.dart';
+import 'features/settings/domain/usecases/get_app_settings.dart';
+import 'shared/navigation/app_router.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -9,72 +11,37 @@ Future<void> main() async {
   // Initialize dependency injection
   await di.init();
 
-  runApp(const IntervalApp());
+  // Check Onboarding Status
+  final getAppSettings = di.sl<GetAppSettings>();
+  final settingsResult = await getAppSettings();
+
+  bool onboardingCompleted = false;
+
+  settingsResult.fold(
+    (failure) => onboardingCompleted = false, // Default to false on error
+    (settings) => onboardingCompleted = settings.onboardingCompleted,
+  );
+
+  final router = createAppRouter(onboardingCompleted);
+
+  runApp(IntervalApp(router: router));
 }
 
 class IntervalApp extends StatelessWidget {
-  const IntervalApp({super.key});
+  final RouterConfig<Object> router;
+
+  const IntervalApp({
+    super.key,
+    required this.router,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Interval',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      home: const PlaceholderHomeScreen(),
-    );
-  }
-}
-
-/// Temporary placeholder screen until we build the real UI
-class PlaceholderHomeScreen extends StatelessWidget {
-  const PlaceholderHomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Interval',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w300,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Minimalist Awareness Logger',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 48),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Coming Soon',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      routerConfig: router,
     );
   }
 }
