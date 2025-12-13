@@ -217,6 +217,9 @@ class AppTheme {
         ),
       );
 
+  // Default theme (alias for lightTheme)
+  static ThemeData get theme => lightTheme;
+
   // Private constructor to prevent instantiation
   AppTheme._();
 }
