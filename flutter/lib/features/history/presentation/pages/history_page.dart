@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 
@@ -7,9 +8,13 @@ import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../logging/domain/entities/log.dart';
+import '../../../logging/presentation/bloc/logging_bloc.dart';
+import '../../../logging/presentation/bloc/logging_event.dart';
+import '../../../logging/presentation/bloc/logging_state.dart';
 import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
 import '../bloc/history_state.dart';
+import '../widgets/edit_log_dialog.dart';
 
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
@@ -18,16 +23,52 @@ class HistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Initial load for current month (or reasonable range)
     final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final startOfMonth =
+        DateTime(now.year, now.month, 1).millisecondsSinceEpoch;
+    final endOfMonth =
+        DateTime(now.year, now.month + 1, 0, 23, 59, 59).millisecondsSinceEpoch;
 
-    return BlocProvider(
-      create: (_) => GetIt.I<HistoryBloc>()
-        ..add(HistoryEvent.loadHistory(
-          startDate: startOfMonth,
-          endDate: endOfDay,
-        )),
-      child: const HistoryView(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => GetIt.I<HistoryBloc>()
+            ..add(HistoryEvent.loadHistory(
+              startDate: DateTime.fromMillisecondsSinceEpoch(startOfMonth),
+              endDate: DateTime.fromMillisecondsSinceEpoch(endOfMonth),
+            )),
+        ),
+        BlocProvider(
+          create: (_) => GetIt.I<LoggingBloc>(),
+        ),
+      ],
+      child: BlocListener<LoggingBloc, LoggingState>(
+        listener: (context, state) {
+          state.maybeWhen(
+            success: (message, logs) {
+              // Refresh history after edit/delete
+              context.read<HistoryBloc>().add(
+                    const HistoryEvent.refreshHistory(),
+                  );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(message),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
+            error: (message) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(message),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            },
+            orElse: () {},
+          );
+        },
+        child: const HistoryView(),
+      ),
     );
   }
 }
@@ -188,55 +229,146 @@ class _HistoryLogCard extends StatelessWidget {
     final timeStr = DateFormat('h:mm a').format(date);
     final dateStr = DateFormat('MMM d').format(date);
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    // Save this context before creating Slidable
+    final cardContext = context;
+
+    return Slidable(
+      key: Key(log.id),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          SlidableAction(
+            onPressed: (_) => _showEditDialog(cardContext, log),
+            backgroundColor: AppColors.white,
+            foregroundColor: AppColors.black,
+            icon: Icons.edit,
+            label: 'Edit',
+          ),
+          SlidableAction(
+            onPressed: (_) => _showDeleteConfirmation(cardContext, log),
+            backgroundColor: AppColors.error,
+            foregroundColor: AppColors.white,
+            icon: Icons.delete,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onLongPress: () => _showEditDialog(context, log),
+        child: AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        '$dateStr · $timeStr',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.grey4,
+                        ),
+                      ),
+                      if (log.entryType == EntryType.voice) ...[
+                        const SizedBox(width: 8),
+                        const Text(
+                          '🎤',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const Icon(
+                    Icons.swipe_left,
+                    size: 16,
+                    color: AppColors.grey3,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
-                '$dateStr · $timeStr',
+                log.content,
                 style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.grey4,
+                  fontSize: 16,
+                  color: AppColors.white,
                 ),
               ),
-              if (log.entryType == EntryType.voice)
-                const Text(
-                  '🎤',
-                  style: TextStyle(fontSize: 12),
+              if (log.category != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.grey2,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    log.category!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.grey5,
+                    ),
+                  ),
                 ),
+              ],
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            log.content,
-            style: const TextStyle(
-              fontSize: 16,
-              color: AppColors.white,
+        ),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Log log) {
+    showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => BlocProvider.value(
+        value: context.read<LoggingBloc>(),
+        child: EditLogDialog(log: log),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Log log) {
+    // Save the parent context before showing dialog
+    final parentContext = context;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.grey1,
+        title: const Text(
+          'Delete Log?',
+          style: TextStyle(color: AppColors.white),
+        ),
+        content: const Text(
+          'This action cannot be undone.',
+          style: TextStyle(color: AppColors.grey4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.grey4),
             ),
           ),
-          if (log.category != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.grey2,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                log.category!,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.grey5,
-                ),
-              ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              // Use parent context, not dialog context
+              parentContext.read<LoggingBloc>().add(
+                    LoggingEvent.deleteLog(id: log.id),
+                  );
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
             ),
-          ],
+          ),
         ],
       ),
     );

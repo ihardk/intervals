@@ -82,8 +82,9 @@ Future<void> init() async {
   // Singleton instances
   sl.registerLazySingleton<LogRepository>(
     () => LogRepositoryImpl(
-      logsDao: sl(),
-      categoriesDao: sl(),
+      logsDao: sl<AppDatabase>().logsDao,
+      categoriesDao: sl<AppDatabase>().categoriesDao,
+      settingsDao: sl<AppDatabase>().settingsDao,
     ),
   );
 

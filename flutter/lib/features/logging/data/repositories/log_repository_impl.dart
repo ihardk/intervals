@@ -4,7 +4,9 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/daos/logs_dao.dart';
 import '../../../../core/database/daos/categories_dao.dart';
+import '../../../../core/database/daos/settings_dao.dart';
 import '../../../../core/database/app_database.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/log.dart' as domain;
 import '../../domain/repositories/log_repository.dart';
@@ -14,10 +16,12 @@ import '../../domain/repositories/log_repository.dart';
 class LogRepositoryImpl implements LogRepository {
   final LogsDao logsDao;
   final CategoriesDao categoriesDao;
+  final SettingsDao settingsDao;
 
   LogRepositoryImpl({
     required this.logsDao,
     required this.categoriesDao,
+    required this.settingsDao,
   });
 
   @override
@@ -34,10 +38,15 @@ class LogRepositoryImpl implements LogRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
       final logId = const Uuid().v4();
 
-      // Auto-categorize if category not provided
+      // Auto-categorize if category not provided and setting is enabled
       String? finalCategory = category;
       if (finalCategory == null && content.isNotEmpty) {
-        finalCategory = await _categorizeContent(content);
+        final autoCategorizeSetting =
+            await settingsDao.getSetting(AppConstants.keyAutoCategorize);
+        final autoCategorize = autoCategorizeSetting?.value == 'true';
+        if (autoCategorize) {
+          finalCategory = await _categorizeContent(content);
+        }
       }
 
       final logCompanion = LogsCompanion.insert(
@@ -108,18 +117,21 @@ class LogRepositoryImpl implements LogRepository {
       final logs = logsData.map(_mapToDomain).toList();
       return Right(logs);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get logs by date range: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get logs by date range: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, List<domain.Log>>> getLogsByCategory(String category) async {
+  Future<Either<Failure, List<domain.Log>>> getLogsByCategory(
+      String category) async {
     try {
       final logsData = await logsDao.getLogsByCategory(category);
       final logs = logsData.map(_mapToDomain).toList();
       return Right(logs);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get logs by category: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get logs by category: ${e.toString()}'));
     }
   }
 
@@ -177,7 +189,8 @@ class LogRepositoryImpl implements LogRepository {
       );
       return Right(logs.length);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get logs count by date range: ${e.toString()}'));
+      return Left(DatabaseFailure(
+          'Failed to get logs count by date range: ${e.toString()}'));
     }
   }
 
@@ -185,8 +198,8 @@ class LogRepositoryImpl implements LogRepository {
   Stream<Either<Failure, List<domain.Log>>> watchTodayLogs() {
     try {
       return logsDao.watchTodayLogs().map(
-        (logsData) => Right(logsData.map(_mapToDomain).toList()),
-      );
+            (logsData) => Right(logsData.map(_mapToDomain).toList()),
+          );
     } catch (e) {
       return Stream.value(
         Left(DatabaseFailure('Failed to watch today logs: ${e.toString()}')),
@@ -205,7 +218,7 @@ class LogRepositoryImpl implements LogRepository {
 
         for (final keyword in keywords) {
           if (lowerContent.contains(keyword.toString().toLowerCase())) {
-            return category.id;
+            return category.name; // Return name instead of ID
           }
         }
       }
@@ -244,7 +257,8 @@ class LogRepositoryImpl implements LogRepository {
       content: data.content,
       entryType: _stringToEntryType(data.entryType),
       audioPath: data.audioPath,
-      transcriptionStatus: _stringToTranscriptionStatus(data.transcriptionStatus),
+      transcriptionStatus:
+          _stringToTranscriptionStatus(data.transcriptionStatus),
       category: data.category,
       tags: tagsList,
       mood: data.mood,
@@ -263,7 +277,8 @@ class LogRepositoryImpl implements LogRepository {
       content: log.content,
       entryType: _entryTypeToString(log.entryType),
       audioPath: log.audioPath,
-      transcriptionStatus: _transcriptionStatusToString(log.transcriptionStatus),
+      transcriptionStatus:
+          _transcriptionStatusToString(log.transcriptionStatus),
       category: log.category,
       tags: log.tags.isNotEmpty ? jsonEncode(log.tags) : null,
       mood: log.mood,

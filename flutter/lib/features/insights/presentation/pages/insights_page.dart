@@ -93,10 +93,12 @@ class InsightsView extends StatelessWidget {
                                 value:
                                     '${(insight.data.completionRate * 100).toInt()}%',
                               ),
-                              // Placeholder for Streak (needs StreakBloc integration)
-                              const _StatCard(
+                              // Streak data
+                              _StatCard(
                                 title: 'STREAK',
-                                value: '-',
+                                value: insight.data.streakDays > 0
+                                    ? '${insight.data.streakDays} ${insight.data.streakDays == 1 ? 'day' : 'days'}'
+                                    : '-',
                               ),
                             ],
                           ),
@@ -185,7 +187,7 @@ class InsightsView extends StatelessWidget {
                               BarChartData(
                                 gridData: const FlGridData(show: false),
                                 borderData: FlBorderData(show: false),
-                                titlesData: const FlTitlesData(
+                                titlesData: FlTitlesData(
                                   show: true,
                                   topTitles: AxisTitles(
                                       sideTitles:
@@ -199,20 +201,65 @@ class InsightsView extends StatelessWidget {
                                   bottomTitles: AxisTitles(
                                     sideTitles: SideTitles(
                                       showTitles: true,
-                                      getTitlesWidget: _bottomTitles,
+                                      getTitlesWidget: (value, meta) {
+                                        if (value < 0 || value > 6) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        // Calculate actual date for this bar
+                                        // Bar 0 = 6 days ago, Bar 6 = today
+                                        final insightDate =
+                                            DateTime.parse(insight.date);
+                                        final daysAgo = 6 - value.toInt();
+                                        final barDate = insightDate
+                                            .subtract(Duration(days: daysAgo));
+
+                                        // weekday: 1=Mon, 2=Tue, ..., 7=Sun
+                                        final dayNames = [
+                                          'Mon',
+                                          'Tue',
+                                          'Wed',
+                                          'Thu',
+                                          'Fri',
+                                          'Sat',
+                                          'Sun'
+                                        ];
+                                        final dayName =
+                                            dayNames[(barDate.weekday - 1) % 7];
+
+                                        return SideTitleWidget(
+                                          axisSide: meta.axisSide,
+                                          child: Text(
+                                            '$dayName ${barDate.day}',
+                                            style: const TextStyle(
+                                              color: AppColors.grey4,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       reservedSize: 30,
                                     ),
                                   ),
                                 ),
                                 barGroups: [
-                                  // Placeholder data - in real app would come from Bloc
-                                  _makeGroupData(0, 5),
-                                  _makeGroupData(1, 8),
-                                  _makeGroupData(2, 6),
-                                  _makeGroupData(3, 12),
-                                  _makeGroupData(4, 9),
-                                  _makeGroupData(5, 4),
-                                  _makeGroupData(6, 10),
+                                  // Use real weekly activity data (reversed to show oldest to newest left-to-right)
+                                  ...List.generate(
+                                    insight.data.weeklyActivity.length,
+                                    (index) {
+                                      // weeklyActivity: [0] = today, [6] = 6 days ago
+                                      // Chart wants: [0] = 6 days ago, [6] = today
+                                      final reversedIndex =
+                                          insight.data.weeklyActivity.length -
+                                              1 -
+                                              index;
+                                      return _makeGroupData(
+                                        index,
+                                        insight
+                                            .data.weeklyActivity[reversedIndex]
+                                            .toDouble(),
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
                             ),

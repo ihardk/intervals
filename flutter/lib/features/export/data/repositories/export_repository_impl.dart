@@ -31,11 +31,21 @@ class ExportRepositoryImpl implements ExportRepository {
       final startTimestamp = DateTime.parse(startDate).millisecondsSinceEpoch;
       final endTimestamp = DateTime.parse(endDate).millisecondsSinceEpoch;
 
-      final logs = await logsDao.getLogsByDateRange(startTimestamp, endTimestamp);
+      final logs =
+          await logsDao.getLogsByDateRange(startTimestamp, endTimestamp);
 
       // Create CSV data
       final List<List<dynamic>> csvData = [
-        ['ID', 'Timestamp', 'Content', 'Entry Type', 'Category', 'Tags', 'Mood', 'Created At'],
+        [
+          'ID',
+          'Timestamp',
+          'Content',
+          'Entry Type',
+          'Category',
+          'Tags',
+          'Mood',
+          'Created At'
+        ],
       ];
 
       for (final log in logs) {
@@ -55,7 +65,8 @@ class ExportRepositoryImpl implements ExportRepository {
 
       // Save to file
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'logs_export_${DateTime.now().millisecondsSinceEpoch}.csv';
+      final fileName =
+          'logs_export_${DateTime.now().millisecondsSinceEpoch}.csv';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsString(csvString);
@@ -72,7 +83,8 @@ class ExportRepositoryImpl implements ExportRepository {
 
       return Right(filePath);
     } catch (e) {
-      return Left(FileSystemFailure('Failed to export to CSV: ${e.toString()}'));
+      return Left(
+          FileSystemFailure('Failed to export to CSV: ${e.toString()}'));
     }
   }
 
@@ -85,34 +97,41 @@ class ExportRepositoryImpl implements ExportRepository {
       final startTimestamp = DateTime.parse(startDate).millisecondsSinceEpoch;
       final endTimestamp = DateTime.parse(endDate).millisecondsSinceEpoch;
 
-      final logs = await logsDao.getLogsByDateRange(startTimestamp, endTimestamp);
+      final logs =
+          await logsDao.getLogsByDateRange(startTimestamp, endTimestamp);
 
       // Create JSON data
-      final jsonData = logs.map((log) => {
-        'id': log.id,
-        'timestamp': DateTime.fromMillisecondsSinceEpoch(log.timestamp).toIso8601String(),
-        'content': log.content,
-        'entryType': log.entryType,
-        'category': log.category,
-        'tags': log.tags,
-        'mood': log.mood,
-        'createdAt': DateTime.fromMillisecondsSinceEpoch(log.createdAt).toIso8601String(),
-        'updatedAt': DateTime.fromMillisecondsSinceEpoch(log.updatedAt).toIso8601String(),
-      }).toList();
+      final jsonData = logs
+          .map((log) => {
+                'id': log.id,
+                'timestamp': DateTime.fromMillisecondsSinceEpoch(log.timestamp)
+                    .toIso8601String(),
+                'content': log.content,
+                'entryType': log.entryType,
+                'category': log.category,
+                'tags': log.tags,
+                'mood': log.mood,
+                'createdAt': DateTime.fromMillisecondsSinceEpoch(log.createdAt)
+                    .toIso8601String(),
+                'updatedAt': DateTime.fromMillisecondsSinceEpoch(log.updatedAt)
+                    .toIso8601String(),
+              })
+          .toList();
 
       final jsonString = const JsonEncoder.withIndent('  ').convert({
-        'export_date': DateTime.now().toIso8601String(),
-        'date_range': {
+        'exportDate': DateTime.now().toIso8601String(),
+        'dateRange': {
           'start': startDate,
           'end': endDate,
         },
-        'logs_count': logs.length,
+        'logsCount': logs.length,
         'logs': jsonData,
       });
 
       // Save to file
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'logs_export_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName =
+          'logs_export_${DateTime.now().millisecondsSinceEpoch}.json';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsString(jsonString);
@@ -129,7 +148,8 @@ class ExportRepositoryImpl implements ExportRepository {
 
       return Right(filePath);
     } catch (e) {
-      return Left(FileSystemFailure('Failed to export to JSON: ${e.toString()}'));
+      return Left(
+          FileSystemFailure('Failed to export to JSON: ${e.toString()}'));
     }
   }
 
@@ -140,29 +160,34 @@ class ExportRepositoryImpl implements ExportRepository {
       final exports = exportsData.map(_mapToDomain).toList();
       return Right(exports);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get export history: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get export history: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, List<ExportRecord>>> getExportsByType(String type) async {
+  Future<Either<Failure, List<ExportRecord>>> getExportsByType(
+      String type) async {
     try {
       final exportsData = await exportsDao.getExportsByType(type);
       final exports = exportsData.map(_mapToDomain).toList();
       return Right(exports);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get exports by type: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get exports by type: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, List<ExportRecord>>> getRecentExports({int limit = 10}) async {
+  Future<Either<Failure, List<ExportRecord>>> getRecentExports(
+      {int limit = 10}) async {
     try {
       final exportsData = await exportsDao.getRecentExports(limit: limit);
       final exports = exportsData.map(_mapToDomain).toList();
       return Right(exports);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get recent exports: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get recent exports: ${e.toString()}'));
     }
   }
 
@@ -172,7 +197,8 @@ class ExportRepositoryImpl implements ExportRepository {
       final count = await exportsDao.deleteOldExports(olderThanDays);
       return Right(count);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to delete old exports: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to delete old exports: ${e.toString()}'));
     }
   }
 
@@ -192,7 +218,8 @@ class ExportRepositoryImpl implements ExportRepository {
       final totalRecords = await exportsDao.getTotalExportedRecords();
       return Right(totalRecords);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get total exported records: ${e.toString()}'));
+      return Left(DatabaseFailure(
+          'Failed to get total exported records: ${e.toString()}'));
     }
   }
 
@@ -202,7 +229,8 @@ class ExportRepositoryImpl implements ExportRepository {
       final totalSize = await exportsDao.getTotalExportSize();
       return Right(totalSize);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get total export size: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get total export size: ${e.toString()}'));
     }
   }
 

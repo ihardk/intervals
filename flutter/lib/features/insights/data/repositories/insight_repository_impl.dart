@@ -54,11 +54,13 @@ class InsightRepositoryImpl implements InsightRepository {
     int limit = 30,
   }) async {
     try {
-      final insightsData = await insightsDao.getInsightsByType(insightType, limit: limit);
+      final insightsData =
+          await insightsDao.getInsightsByType(insightType, limit: limit);
       final insights = insightsData.map(_mapToDomain).toList();
       return Right(insights);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get insights by type: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get insights by type: ${e.toString()}'));
     }
   }
 
@@ -75,7 +77,8 @@ class InsightRepositoryImpl implements InsightRepository {
       final insights = insightsData.map(_mapToDomain).toList();
       return Right(insights);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get daily insights: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get daily insights: ${e.toString()}'));
     }
   }
 
@@ -99,8 +102,7 @@ class InsightRepositoryImpl implements InsightRepository {
   @override
   Future<Either<Failure, domain.Insight?>> getMonthlyInsight() async {
     final now = DateTime.now();
-    final dateString =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-01';
+    final dateString = '${now.year}-${now.month.toString().padLeft(2, '0')}-01';
     return getInsight(insightType: 'monthly', date: dateString);
   }
 
@@ -131,9 +133,11 @@ class InsightRepositoryImpl implements InsightRepository {
   }
 
   @override
-  Future<Either<Failure, domain.Insight>> generateDailyInsight(DateTime date) async {
+  Future<Either<Failure, domain.Insight>> generateDailyInsight(
+      DateTime date) async {
     try {
-      final startOfDay = DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
+      final startOfDay =
+          DateTime(date.year, date.month, date.day).millisecondsSinceEpoch;
       final endOfDay = startOfDay + 86400000;
 
       final logs = await logsDao.getLogsByDateRange(startOfDay, endOfDay);
@@ -144,14 +148,45 @@ class InsightRepositoryImpl implements InsightRepository {
 
       for (final log in logs) {
         if (log.category != null) {
-          categoryCounts[log.category!] = (categoryCounts[log.category!] ?? 0) + 1;
+          categoryCounts[log.category!] =
+              (categoryCounts[log.category!] ?? 0) + 1;
         }
       }
 
+      // Convert category counts to ActivityCount list and sort by count
+      final topActivities = categoryCounts.entries
+          .map((e) => {
+                'activity': e.key,
+                'count': e.value,
+              })
+          .toList()
+        ..sort((a, b) => (b['count'] as int).compareTo(a['count'] as int));
+
+      // Take top 5 activities
+      final top5Activities = topActivities.take(5).toList();
+
+      // Get intervals for completion rate (if available)
+      // For now, we'll use a simple calculation: totalLogs / expected intervals
+      // TODO: Fetch actual intervals data when intervals feature is ready
+      final completionRate = totalLogs > 0 ? 1.0 : 0.0; // Placeholder
+
+      // Calculate streak: consecutive days with logs
+      final streakDays = await _calculateCurrentStreak(date);
+
+      // Calculate weekly activity (past 7 days)
+      final weeklyActivity = await _calculateWeeklyActivity(date);
+
+      // Create InsightData JSON that matches the freezed entity structure
       final insightData = {
-        'total_logs': totalLogs,
-        'category_distribution': categoryCounts,
-        'date': date.toIso8601String(),
+        'totalLogs': totalLogs,
+        'skippedIntervals': 0, // TODO: Calculate from intervals
+        'completionRate': completionRate,
+        'streakDays': streakDays,
+        'weeklyActivity': weeklyActivity,
+        'topActivities': top5Activities,
+        'productivityScore': null,
+        'peakHours': [],
+        'distractionPeriods': [],
       };
 
       final insightId = const Uuid().v4();
@@ -168,12 +203,14 @@ class InsightRepositoryImpl implements InsightRepository {
       final createdInsight = await insightsDao.getInsightById(insightId);
 
       if (createdInsight == null) {
-        return const Left(DatabaseFailure('Failed to retrieve generated insight'));
+        return const Left(
+            DatabaseFailure('Failed to retrieve generated insight'));
       }
 
       return Right(_mapToDomain(createdInsight));
     } catch (e) {
-      return Left(DatabaseFailure('Failed to generate daily insight: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to generate daily insight: ${e.toString()}'));
     }
   }
 
@@ -183,7 +220,8 @@ class InsightRepositoryImpl implements InsightRepository {
       final count = await insightsDao.deleteExpiredInsights();
       return Right(count);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to delete expired insights: ${e.toString()}'));
+      return Left(DatabaseFailure(
+          'Failed to delete expired insights: ${e.toString()}'));
     }
   }
 
@@ -193,7 +231,8 @@ class InsightRepositoryImpl implements InsightRepository {
       final count = await insightsDao.deleteInsightsByType(insightType);
       return Right(count);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to delete insights by type: ${e.toString()}'));
+      return Left(DatabaseFailure(
+          'Failed to delete insights by type: ${e.toString()}'));
     }
   }
 
@@ -203,7 +242,8 @@ class InsightRepositoryImpl implements InsightRepository {
       final count = await insightsDao.getInsightsCount();
       return Right(count);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get insights count: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get insights count: ${e.toString()}'));
     }
   }
 
@@ -214,8 +254,8 @@ class InsightRepositoryImpl implements InsightRepository {
   }) {
     try {
       return insightsDao.watchInsightsByType(insightType, limit: limit).map(
-        (insightsData) => Right(insightsData.map(_mapToDomain).toList()),
-      );
+            (insightsData) => Right(insightsData.map(_mapToDomain).toList()),
+          );
     } catch (e) {
       return Stream.value(
         Left(DatabaseFailure('Failed to watch insights: ${e.toString()}')),
@@ -231,7 +271,8 @@ class InsightRepositoryImpl implements InsightRepository {
     // Parse JSON data to InsightData
     domain.InsightData insightData;
     try {
-      final Map<String, dynamic> dataMap = jsonDecode(data.data) as Map<String, dynamic>;
+      final Map<String, dynamic> dataMap =
+          jsonDecode(data.data) as Map<String, dynamic>;
       insightData = domain.InsightData.fromJson(dataMap);
     } catch (e) {
       // If parsing fails, create default InsightData
@@ -262,5 +303,58 @@ class InsightRepositoryImpl implements InsightRepository {
       default:
         return domain.InsightType.daily;
     }
+  }
+
+  /// Generate unique insight ID
+  String _generateInsightId(int timestamp, String type) {
+    return '${type}_$timestamp';
+  }
+
+  /// Calculate current streak of consecutive days with logs
+  Future<int> _calculateCurrentStreak(DateTime currentDate) async {
+    int streak = 0;
+    DateTime checkDate = currentDate;
+
+    // Check backwards from current date
+    while (true) {
+      final startOfDay =
+          DateTime(checkDate.year, checkDate.month, checkDate.day)
+              .millisecondsSinceEpoch;
+      final endOfDay = startOfDay + 86400000;
+
+      final logs = await logsDao.getLogsByDateRange(startOfDay, endOfDay);
+
+      if (logs.isEmpty) {
+        // No logs on this day, streak ends
+        break;
+      }
+
+      streak++;
+      checkDate = checkDate.subtract(const Duration(days: 1));
+
+      // Limit to reasonable streak (1 year max to avoid long queries)
+      if (streak >= 365) break;
+    }
+
+    return streak;
+  }
+
+  /// Calculate weekly activity: log counts for past 7 days
+  /// Returns list where index 0 = today, 1 = yesterday, etc.
+  Future<List<int>> _calculateWeeklyActivity(DateTime currentDate) async {
+    final List<int> counts = [];
+
+    for (int i = 0; i < 7; i++) {
+      final checkDate = currentDate.subtract(Duration(days: i));
+      final startOfDay =
+          DateTime(checkDate.year, checkDate.month, checkDate.day)
+              .millisecondsSinceEpoch;
+      final endOfDay = startOfDay + 86400000;
+
+      final logs = await logsDao.getLogsByDateRange(startOfDay, endOfDay);
+      counts.add(logs.length);
+    }
+
+    return counts;
   }
 }

@@ -57,6 +57,8 @@ class InsightData with _$InsightData {
     @Default(0) int skippedIntervals,
     @Default(0.0) double completionRate,
     @Default(0) int streakDays,
+    @Default([])
+    List<int> weeklyActivity, // Past 7 days log counts (index 0 = today)
     @Default([]) List<ActivityCount> topActivities,
     double? productivityScore,
     @Default([]) List<int> peakHours,

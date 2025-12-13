@@ -37,7 +37,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final categories = categoriesData.map(_mapToDomain).toList();
       return Right(categories);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get all categories: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get all categories: ${e.toString()}'));
     }
   }
 
@@ -48,7 +49,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final categories = categoriesData.map(_mapToDomain).toList();
       return Right(categories);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get system categories: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get system categories: ${e.toString()}'));
     }
   }
 
@@ -59,7 +61,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final categories = categoriesData.map(_mapToDomain).toList();
       return Right(categories);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get user categories: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get user categories: ${e.toString()}'));
     }
   }
 
@@ -87,12 +90,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final categoryData = await categoriesDao.getCategoryById(categoryId);
 
       if (categoryData == null) {
-        return const Left(DatabaseFailure('Failed to retrieve created category'));
+        return const Left(
+            DatabaseFailure('Failed to retrieve created category'));
       }
 
       return Right(_mapToDomain(categoryData));
     } catch (e) {
-      return Left(DatabaseFailure('Failed to create category: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to create category: ${e.toString()}'));
     }
   }
 
@@ -103,7 +108,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       await categoriesDao.updateCategory(categoryData);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to update category: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to update category: ${e.toString()}'));
     }
   }
 
@@ -113,7 +119,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       await categoriesDao.deleteCategory(id);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to delete category: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to delete category: ${e.toString()}'));
     }
   }
 
@@ -128,14 +135,15 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
         for (final keyword in keywords) {
           if (lowerContent.contains(keyword.toString().toLowerCase())) {
-            return Right(category.id);
+            return Right(category.name); // Return name, not ID
           }
         }
       }
 
       return const Right(null); // No matching category
     } catch (e) {
-      return Left(DatabaseFailure('Failed to categorize content: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to categorize content: ${e.toString()}'));
     }
   }
 
@@ -145,7 +153,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       final categories = await categoriesDao.getAllCategories();
       return Right(categories.length);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get categories count: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get categories count: ${e.toString()}'));
     }
   }
 
@@ -153,8 +162,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Stream<Either<Failure, List<domain.Category>>> watchCategories() {
     try {
       return categoriesDao.watchAllCategories().map(
-        (categoriesData) => Right(categoriesData.map(_mapToDomain).toList()),
-      );
+            (categoriesData) =>
+                Right(categoriesData.map(_mapToDomain).toList()),
+          );
     } catch (e) {
       return Stream.value(
         Left(DatabaseFailure('Failed to watch categories: ${e.toString()}')),
