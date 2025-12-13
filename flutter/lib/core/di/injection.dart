@@ -13,6 +13,7 @@ import '../../features/logging/domain/usecases/search_logs.dart';
 import '../../features/logging/domain/usecases/create_interval.dart';
 import '../../features/logging/domain/usecases/complete_interval.dart';
 import '../../features/logging/domain/usecases/get_today_completion_rate.dart';
+import '../../features/logging/presentation/bloc/logging_bloc.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/get_app_settings.dart';
@@ -117,15 +118,19 @@ Future<void> init() async {
 
   // ============== BLOCS ==============
   // Registered as factories so each screen gets a new instance
-  // TODO: Register Blocs when they're created
-  // sl.registerFactory(() => LoggingBloc(
-  //   createLog: sl(),
-  //   getTodayLogs: sl(),
-  //   updateLog: sl(),
-  //   deleteLog: sl(),
-  // ));
+  sl.registerFactory(() => LoggingBloc(
+    createLog: sl(),
+    getTodayLogs: sl(),
+    updateLog: sl(),
+    deleteLog: sl(),
+    searchLogs: sl(),
+  ));
 
   // TODO: Add more Bloc registrations as they're created
+  // - HistoryBloc
+  // - InsightsBloc
+  // - SettingsBloc
+  // - OnboardingBloc
 }
 
 /// Reset all dependencies (useful for testing)
