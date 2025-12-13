@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'core/di/injection.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'features/settings/domain/usecases/get_app_settings.dart';
+import 'features/notifications/data/services/notification_service.dart';
 import 'shared/navigation/app_router.dart';
+import 'shared/navigation/notification_handler.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -23,6 +25,13 @@ Future<void> main() async {
   );
 
   final router = createAppRouter(onboardingCompleted);
+
+  // Setup notification navigation callbacks
+  final notificationService = di.sl<NotificationService>();
+  notificationService.setupNavigationCallbacks(
+    onTap: (_) => NotificationHandler.handleNotificationTap(),
+    onAction: (actionId) => NotificationHandler.handleNotificationAction(actionId),
+  );
 
   runApp(IntervalApp(router: router));
 }

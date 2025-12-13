@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/insights/presentation/pages/insights_page.dart';
@@ -5,24 +6,35 @@ import '../../features/logging/presentation/pages/logging_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
 import '../../features/onboarding/presentation/pages/interval_selection_page.dart';
+import '../../features/notifications/domain/entities/notification_action.dart';
 import '../widgets/main_shell.dart';
+
+/// Global navigation key for handling deep links
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> shellNavigatorKey = GlobalKey<NavigatorState>();
 
 /// App Router - defines all routes using go_router
 /// Follows Same structure as React Native: Onboarding → MainTabs
 GoRouter createAppRouter(bool onboardingCompleted) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: onboardingCompleted ? '/' : '/onboarding/welcome',
     routes: [
       // Main Shell with Bottom Navigation
       ShellRoute(
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) => MainShell(child: child),
         routes: [
           GoRoute(
             path: '/',
             name: 'log',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: LoggingPage(),
-            ),
+            pageBuilder: (context, state) {
+              // Handle deep link from notification with action
+              final action = state.extra as NotificationAction?;
+              return NoTransitionPage(
+                child: LoggingPage(initialAction: action),
+              );
+            },
           ),
           GoRoute(
             path: '/history',

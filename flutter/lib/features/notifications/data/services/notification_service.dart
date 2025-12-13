@@ -177,4 +177,14 @@ class NotificationService {
       instance.onNotificationTap?.call(response.payload);
     }
   }
+
+  /// Set up navigation callbacks
+  /// Should be called after router is initialized
+  void setupNavigationCallbacks({
+    required Function(String?) onTap,
+    required Function(String?) onAction,
+  }) {
+    onNotificationTap = onTap;
+    onNotificationAction = onAction;
+  }
 }
