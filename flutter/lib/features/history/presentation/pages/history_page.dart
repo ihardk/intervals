@@ -15,6 +15,10 @@ import '../bloc/history_bloc.dart';
 import '../bloc/history_event.dart';
 import '../bloc/history_state.dart';
 import '../widgets/edit_log_dialog.dart';
+import '../widgets/calendar_heatmap.dart';
+
+/// View mode for history page
+enum HistoryViewMode { list, calendar }
 
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
@@ -82,9 +86,9 @@ class HistoryView extends StatefulWidget {
 
 class _HistoryViewState extends State<HistoryView> {
   final TextEditingController _searchController = TextEditingController();
+  HistoryViewMode _viewMode = HistoryViewMode.list;
 
   // TODO: Add category filter state
-  // TODO: Add view mode (List/Calendar) state
 
   @override
   Widget build(BuildContext context) {
@@ -135,10 +139,18 @@ class _HistoryViewState extends State<HistoryView> {
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.calendar_today,
-                        color: AppColors.white),
+                    icon: Icon(
+                      _viewMode == HistoryViewMode.list
+                          ? Icons.calendar_month
+                          : Icons.list,
+                      color: AppColors.white,
+                    ),
                     onPressed: () {
-                      // TODO: Toggle view mode
+                      setState(() {
+                        _viewMode = _viewMode == HistoryViewMode.list
+                            ? HistoryViewMode.calendar
+                            : HistoryViewMode.list;
+                      });
                     },
                   ),
                 ],
@@ -161,7 +173,7 @@ class _HistoryViewState extends State<HistoryView> {
 
             const SizedBox(height: 20),
 
-            // Logs List
+            // Logs List or Calendar View
             Expanded(
               child: BlocBuilder<HistoryBloc, HistoryState>(
                 builder: (context, state) {
@@ -174,12 +186,44 @@ class _HistoryViewState extends State<HistoryView> {
                             style: const TextStyle(color: AppColors.white))),
                     loaded: (logs, startDate, endDate, searchQuery,
                         filterCategory) {
-                      if (logs.isEmpty) {
+                      if (logs.isEmpty && _viewMode == HistoryViewMode.list) {
                         return const Center(
                             child: Text('No logs found',
                                 style: TextStyle(color: AppColors.grey4)));
                       }
 
+                      // Show calendar or list based on view mode
+                      if (_viewMode == HistoryViewMode.calendar) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: CalendarHeatmap(
+                            logs: logs,
+                            onDayTap: (date) {
+                              // Load logs for selected day
+                              final startOfDay = DateTime(
+                                date.year,
+                                date.month,
+                                date.day,
+                              ).millisecondsSinceEpoch;
+                              final endOfDay = startOfDay + 86400000;
+
+                              context.read<HistoryBloc>().add(
+                                    HistoryEvent.loadHistory(
+                                      startDate: DateTime.fromMillisecondsSinceEpoch(startOfDay),
+                                      endDate: DateTime.fromMillisecondsSinceEpoch(endOfDay),
+                                    ),
+                                  );
+
+                              // Switch to list view to show the logs
+                              setState(() {
+                                _viewMode = HistoryViewMode.list;
+                              });
+                            },
+                          ),
+                        );
+                      }
+
+                      // List view
                       // Sort by timestamp desc
                       final sortedLogs = List<Log>.from(logs)
                         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
