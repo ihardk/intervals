@@ -38,6 +38,17 @@ import '../../features/voice/data/repositories/voice_repository_impl.dart';
 import '../../features/voice/domain/repositories/voice_repository.dart';
 import '../../features/voice/presentation/bloc/voice_bloc.dart';
 
+import '../../features/notifications/data/services/notification_service.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/initialize_notifications.dart';
+import '../../features/notifications/domain/usecases/request_notification_permissions.dart';
+import '../../features/notifications/domain/usecases/schedule_interval_notification.dart';
+import '../../features/notifications/domain/usecases/schedule_recurring_notifications.dart';
+import '../../features/notifications/domain/usecases/cancel_all_notifications.dart';
+import '../../features/notifications/domain/usecases/get_pending_notifications.dart';
+import '../../features/notifications/presentation/bloc/notification_bloc.dart';
+
 import '../../features/settings/domain/usecases/toggle_voice.dart';
 import '../../features/settings/domain/usecases/toggle_auto_categorize.dart';
 
@@ -126,6 +137,15 @@ Future<void> init() async {
     ),
   );
 
+  // Notification Service (singleton)
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
+
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      notificationService: sl(),
+    ),
+  );
+
   // ============== USE CASES ==============
   // Logging Use Cases
   sl.registerLazySingleton(() => CreateLog(sl()));
@@ -167,6 +187,14 @@ Future<void> init() async {
   // Export Use Cases
   sl.registerLazySingleton(() => ExportToCSV(sl()));
   sl.registerLazySingleton(() => ExportToJSON(sl()));
+
+  // Notification Use Cases
+  sl.registerLazySingleton(() => InitializeNotifications(sl()));
+  sl.registerLazySingleton(() => RequestNotificationPermissions(sl()));
+  sl.registerLazySingleton(() => ScheduleIntervalNotification(sl()));
+  sl.registerLazySingleton(() => ScheduleRecurringNotifications(sl()));
+  sl.registerLazySingleton(() => CancelAllNotifications(sl()));
+  sl.registerLazySingleton(() => GetPendingNotifications(sl()));
 
   // ============== BLOCS ==============
   // Registered as factories so each screen gets a new instance
@@ -216,6 +244,15 @@ Future<void> init() async {
 
   sl.registerFactory(() => VoiceBloc(
         sl(),
+      ));
+
+  sl.registerFactory(() => NotificationBloc(
+        initializeNotifications: sl(),
+        requestPermissions: sl(),
+        scheduleNotification: sl(),
+        scheduleRecurring: sl(),
+        cancelAll: sl(),
+        getPendingNotifications: sl(),
       ));
 
   // Singleton instance
