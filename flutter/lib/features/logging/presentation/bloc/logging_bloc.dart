@@ -137,7 +137,7 @@ class LoggingBloc extends Bloc<LoggingEvent, LoggingState> {
   ) async {
     emit(const LoggingState.loading());
 
-    final result = await searchLogs(query: event.query);
+    final result = await searchLogs(event.query);
 
     result.fold(
       (failure) => emit(LoggingState.error(message: failure.message)),
