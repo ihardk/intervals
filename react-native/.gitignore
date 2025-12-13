@@ -64,36 +64,3 @@ yarn-error.log
 
 # testing
 /coverage
-
-# Flutter/Dart
-#
-flutter/.dart_tool/
-flutter/.flutter-plugins
-flutter/.flutter-plugins-dependencies
-flutter/.packages
-flutter/.pub-cache/
-flutter/.pub/
-flutter/build/
-flutter/*.iml
-flutter/pubspec.lock
-flutter/.metadata
-flutter/.flutter
-
-# Dart code coverage
-flutter/coverage/
-
-# IntelliJ IDEA
-flutter/.idea/
-flutter/*.iws
-flutter/*.ipr
-
-# VS Code
-flutter/.vscode/
-
-# Generated files
-flutter/**/*.g.dart
-flutter/**/*.freezed.dart
-flutter/**/*.config.dart
-
-# Claude Code
-.claude/
