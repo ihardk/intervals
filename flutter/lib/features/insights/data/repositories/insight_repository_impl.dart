@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/daos/insights_dao.dart';
 import '../../../../core/database/daos/logs_dao.dart';
+import '../../../../core/database/daos/intervals_dao.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/insight.dart' as domain;
@@ -14,10 +15,12 @@ import '../../domain/repositories/insight_repository.dart';
 class InsightRepositoryImpl implements InsightRepository {
   final InsightsDao insightsDao;
   final LogsDao logsDao;
+  final IntervalsDao intervalsDao;
 
   InsightRepositoryImpl({
     required this.insightsDao,
     required this.logsDao,
+    required this.intervalsDao,
   });
 
   @override
@@ -165,10 +168,17 @@ class InsightRepositoryImpl implements InsightRepository {
       // Take top 5 activities
       final top5Activities = topActivities.take(5).toList();
 
-      // Get intervals for completion rate (if available)
-      // For now, we'll use a simple calculation: totalLogs / expected intervals
-      // TODO: Fetch actual intervals data when intervals feature is ready
-      final completionRate = totalLogs > 0 ? 1.0 : 0.0; // Placeholder
+      // Get intervals for completion rate
+      final intervals = await intervalsDao.getIntervalsByDateRange(
+        startOfDay,
+        endOfDay,
+      );
+      final totalIntervals = intervals.length;
+      final completedIntervals =
+          intervals.where((i) => i.isCompleted).length;
+      final completionRate = totalIntervals > 0
+          ? completedIntervals / totalIntervals
+          : 0.0;
 
       // Calculate streak: consecutive days with logs
       final streakDays = await _calculateCurrentStreak(date);
@@ -176,10 +186,18 @@ class InsightRepositoryImpl implements InsightRepository {
       // Calculate weekly activity (past 7 days)
       final weeklyActivity = await _calculateWeeklyActivity(date);
 
+      // Calculate skipped intervals (ignored or not completed)
+      final skippedIntervals = intervals
+          .where((i) =>
+              !i.isCompleted ||
+              i.responseType == 'ignored' ||
+              i.responseType == 'skipped')
+          .length;
+
       // Create InsightData JSON that matches the freezed entity structure
       final insightData = {
         'totalLogs': totalLogs,
-        'skippedIntervals': 0, // TODO: Calculate from intervals
+        'skippedIntervals': skippedIntervals,
         'completionRate': completionRate,
         'streakDays': streakDays,
         'weeklyActivity': weeklyActivity,

@@ -121,6 +121,7 @@ Future<void> init() async {
     () => InsightRepositoryImpl(
       insightsDao: sl(),
       logsDao: sl(),
+      intervalsDao: sl(),
     ),
   );
 
