@@ -12,7 +12,7 @@ class CreateLog {
 
   Future<Either<Failure, Log>> call({
     required String content,
-    required EntryType entryType,
+    required String entryType,
     String? audioPath,
     String? category,
     List<String>? tags,

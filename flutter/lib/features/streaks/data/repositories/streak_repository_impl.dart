@@ -105,8 +105,8 @@ class StreakRepositoryImpl implements StreakRepository {
       final streakCompanion = StreaksCompanion.insert(
         id: streakId,
         streakType: streakType,
-        currentCount: Value(currentCount),
-        bestCount: Value(bestCount),
+        currentCount: currentCount,
+        bestCount: bestCount,
         startDate: startDate,
         isActive: const Value(1),
         createdAt: now,
@@ -228,7 +228,7 @@ class StreakRepositoryImpl implements StreakRepository {
   domain.Streak _mapToDomain(StreakData data) {
     return domain.Streak(
       id: data.id,
-      streakType: data.streakType,
+      streakType: _stringToStreakType(data.streakType),
       currentCount: data.currentCount,
       bestCount: data.bestCount,
       startDate: data.startDate,
@@ -243,7 +243,7 @@ class StreakRepositoryImpl implements StreakRepository {
   StreakData _mapToData(domain.Streak streak) {
     return StreakData(
       id: streak.id,
-      streakType: streak.streakType,
+      streakType: _streakTypeToString(streak.streakType),
       currentCount: streak.currentCount,
       bestCount: streak.bestCount,
       startDate: streak.startDate,
@@ -252,5 +252,31 @@ class StreakRepositoryImpl implements StreakRepository {
       createdAt: streak.createdAt,
       updatedAt: streak.updatedAt,
     );
+  }
+
+  /// Convert string to StreakType enum
+  domain.StreakType _stringToStreakType(String value) {
+    switch (value) {
+      case 'daily_logs':
+        return domain.StreakType.dailyLogs;
+      case 'consistent_intervals':
+        return domain.StreakType.consistentIntervals;
+      case 'no_skip':
+        return domain.StreakType.noSkip;
+      default:
+        return domain.StreakType.dailyLogs;
+    }
+  }
+
+  /// Convert StreakType enum to string
+  String _streakTypeToString(domain.StreakType type) {
+    switch (type) {
+      case domain.StreakType.dailyLogs:
+        return 'daily_logs';
+      case domain.StreakType.consistentIntervals:
+        return 'consistent_intervals';
+      case domain.StreakType.noSkip:
+        return 'no_skip';
+    }
   }
 }

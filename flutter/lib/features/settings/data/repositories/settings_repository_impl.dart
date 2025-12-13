@@ -78,7 +78,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         notificationsEnabled: settingsMap['notifications_enabled'] == 'true',
         voiceEnabled: settingsMap['voice_enabled'] == 'true',
         theme: settingsMap['theme'] ?? 'light',
-        dailyReminderTime: settingsMap['daily_reminder_time'],
+        dailyReminderTime: settingsMap['daily_reminder_time'] ?? '20:00',
         autoCategorize: settingsMap['auto_categorize'] == 'true',
         onboardingCompleted: settingsMap['onboarding_completed'] == 'true',
       );
@@ -168,7 +168,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
             notificationsEnabled: settingsMap['notifications_enabled'] == 'true',
             voiceEnabled: settingsMap['voice_enabled'] == 'true',
             theme: settingsMap['theme'] ?? 'light',
-            dailyReminderTime: settingsMap['daily_reminder_time'],
+            dailyReminderTime: settingsMap['daily_reminder_time'] ?? '20:00',
             autoCategorize: settingsMap['auto_categorize'] == 'true',
             onboardingCompleted: settingsMap['onboarding_completed'] == 'true',
           ));

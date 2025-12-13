@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:dartz/dartz.dart';
+import 'package:drift/drift.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/database/daos/exports_dao.dart';
@@ -157,7 +158,7 @@ class ExportRepositoryImpl implements ExportRepository {
   @override
   Future<Either<Failure, List<ExportRecord>>> getRecentExports({int limit = 10}) async {
     try {
-      final exportsData = await exportsDao.getRecentExports(limit);
+      final exportsData = await exportsDao.getRecentExports(limit: limit);
       final exports = exportsData.map(_mapToDomain).toList();
       return Right(exports);
     } catch (e) {
@@ -168,8 +169,7 @@ class ExportRepositoryImpl implements ExportRepository {
   @override
   Future<Either<Failure, int>> deleteOldExports(int olderThanDays) async {
     try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: olderThanDays));
-      final count = await exportsDao.deleteOldExports(cutoffDate);
+      final count = await exportsDao.deleteOldExports(olderThanDays);
       return Right(count);
     } catch (e) {
       return Left(DatabaseFailure('Failed to delete old exports: ${e.toString()}'));
@@ -189,7 +189,7 @@ class ExportRepositoryImpl implements ExportRepository {
   @override
   Future<Either<Failure, int>> getTotalExportedRecords() async {
     try {
-      final totalRecords = await exportsDao.getTotalRecordsExported();
+      final totalRecords = await exportsDao.getTotalExportedRecords();
       return Right(totalRecords);
     } catch (e) {
       return Left(DatabaseFailure('Failed to get total exported records: ${e.toString()}'));
@@ -219,14 +219,16 @@ class ExportRepositoryImpl implements ExportRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await exportsDao.insertExport(
-      id: exportId,
-      exportType: exportType,
-      filePath: filePath,
-      dateRangeStart: dateRangeStart,
-      dateRangeEnd: dateRangeEnd,
-      recordCount: recordCount,
-      fileSize: fileSize,
-      createdAt: now,
+      ExportsCompanion.insert(
+        id: exportId,
+        exportType: exportType,
+        filePath: filePath,
+        dateRangeStart: dateRangeStart,
+        dateRangeEnd: dateRangeEnd,
+        recordCount: Value(recordCount),
+        fileSize: Value(fileSize),
+        createdAt: now,
+      ),
     );
   }
 

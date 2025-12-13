@@ -152,8 +152,7 @@ class IntervalRepositoryImpl implements IntervalRepository {
   @override
   Future<Either<Failure, int>> purgeOldIntervals(int olderThanDays) async {
     try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: olderThanDays));
-      final count = await intervalsDao.deleteOldIntervals(cutoffDate);
+      final count = await intervalsDao.purgeOldIntervals(olderThanDays);
       return Right(count);
     } catch (e) {
       return Left(DatabaseFailure('Failed to purge old intervals: ${e.toString()}'));
@@ -194,11 +193,25 @@ class IntervalRepositoryImpl implements IntervalRepository {
       actualTime: data.actualTime,
       intervalDuration: data.intervalDuration,
       isCompleted: data.isCompleted == 1,
-      responseType: data.responseType,
+      responseType: _stringToResponseType(data.responseType),
       responseTime: data.responseTime,
       logId: data.logId,
       createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
     );
+  }
+
+  /// Convert string to ResponseType enum
+  domain.ResponseType? _stringToResponseType(String? value) {
+    if (value == null) return null;
+    switch (value) {
+      case 'logged':
+        return domain.ResponseType.logged;
+      case 'skipped':
+        return domain.ResponseType.skipped;
+      case 'ignored':
+        return domain.ResponseType.ignored;
+      default:
+        return null;
+    }
   }
 }

@@ -6,7 +6,6 @@ import '../../../../core/database/daos/insights_dao.dart';
 import '../../../../core/database/daos/logs_dao.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../logging/domain/entities/log.dart' as domain_log;
 import '../../domain/entities/insight.dart' as domain;
 import '../../domain/repositories/insight_repository.dart';
 
@@ -42,10 +41,7 @@ class InsightRepositoryImpl implements InsightRepository {
     required String date,
   }) async {
     try {
-      final insightData = await insightsDao.getInsightByTypeAndDate(
-        insightType,
-        date,
-      );
+      final insightData = await insightsDao.getInsight(insightType, date);
       return Right(insightData != null ? _mapToDomain(insightData) : null);
     } catch (e) {
       return Left(DatabaseFailure('Failed to get insight: ${e.toString()}'));
@@ -58,10 +54,7 @@ class InsightRepositoryImpl implements InsightRepository {
     int limit = 30,
   }) async {
     try {
-      final insightsData = await insightsDao.getInsightsByType(
-        insightType,
-        limit,
-      );
+      final insightsData = await insightsDao.getInsightsByType(insightType, limit: limit);
       final insights = insightsData.map(_mapToDomain).toList();
       return Right(insights);
     } catch (e) {
@@ -120,12 +113,16 @@ class InsightRepositoryImpl implements InsightRepository {
     int? expiresAt,
   }) async {
     try {
+      final now = DateTime.now().millisecondsSinceEpoch;
       await insightsDao.upsertInsight(
-        id: id,
-        insightType: insightType,
-        date: date,
-        data: data,
-        expiresAt: expiresAt,
+        InsightsCompanion.insert(
+          id: id,
+          insightType: insightType,
+          date: date,
+          data: data,
+          createdAt: now,
+          expiresAt: Value(expiresAt),
+        ),
       );
       return const Right(null);
     } catch (e) {
@@ -216,7 +213,7 @@ class InsightRepositoryImpl implements InsightRepository {
     int limit = 30,
   }) {
     try {
-      return insightsDao.watchInsightsByType(insightType, limit).map(
+      return insightsDao.watchInsightsByType(insightType, limit: limit).map(
         (insightsData) => Right(insightsData.map(_mapToDomain).toList()),
       );
     } catch (e) {
@@ -228,20 +225,42 @@ class InsightRepositoryImpl implements InsightRepository {
 
   /// Map Drift InsightData to domain Insight entity
   domain.Insight _mapToDomain(InsightData data) {
-    Map<String, dynamic> dataMap = {};
+    // Convert string to enum
+    final insightType = _stringToInsightType(data.insightType);
+
+    // Parse JSON data to InsightData
+    domain.InsightData insightData;
     try {
-      dataMap = jsonDecode(data.data) as Map<String, dynamic>;
+      final Map<String, dynamic> dataMap = jsonDecode(data.data) as Map<String, dynamic>;
+      insightData = domain.InsightData.fromJson(dataMap);
     } catch (e) {
-      dataMap = {};
+      // If parsing fails, create default InsightData
+      insightData = const domain.InsightData(totalLogs: 0);
     }
 
     return domain.Insight(
       id: data.id,
-      insightType: data.insightType,
+      insightType: insightType,
       date: data.date,
-      data: dataMap,
+      data: insightData,
       expiresAt: data.expiresAt,
       createdAt: data.createdAt,
     );
+  }
+
+  /// Convert string to InsightType enum
+  domain.InsightType _stringToInsightType(String value) {
+    switch (value) {
+      case 'daily':
+        return domain.InsightType.daily;
+      case 'weekly':
+        return domain.InsightType.weekly;
+      case 'monthly':
+        return domain.InsightType.monthly;
+      case 'pattern':
+        return domain.InsightType.pattern;
+      default:
+        return domain.InsightType.daily;
+    }
   }
 }
