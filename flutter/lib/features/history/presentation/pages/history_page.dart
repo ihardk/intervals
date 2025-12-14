@@ -86,9 +86,9 @@ class HistoryView extends StatefulWidget {
 
 class _HistoryViewState extends State<HistoryView> {
   final TextEditingController _searchController = TextEditingController();
-  HistoryViewMode _viewMode = HistoryViewMode.list;
-
-  // TODO: Add category filter state
+  HistoryViewMode _viewMode =
+      HistoryViewMode.list; // Toggle between list and calendar
+  DateTime? _selectedDate; // For filtering logs in calendar view
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +150,10 @@ class _HistoryViewState extends State<HistoryView> {
                         _viewMode = _viewMode == HistoryViewMode.list
                             ? HistoryViewMode.calendar
                             : HistoryViewMode.list;
+                        // Clear selected date when switching views
+                        if (_viewMode == HistoryViewMode.list) {
+                          _selectedDate = null;
+                        }
                       });
                     },
                   ),
@@ -194,32 +198,102 @@ class _HistoryViewState extends State<HistoryView> {
 
                       // Show calendar or list based on view mode
                       if (_viewMode == HistoryViewMode.calendar) {
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: CalendarHeatmap(
-                            logs: logs,
-                            onDayTap: (date) {
-                              // Load logs for selected day
-                              final startOfDay = DateTime(
-                                date.year,
-                                date.month,
-                                date.day,
-                              ).millisecondsSinceEpoch;
-                              final endOfDay = startOfDay + 86400000;
+                        // Filter logs by selected date
+                        final displayLogs = _selectedDate != null
+                            ? logs.where((log) {
+                                final logDate =
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                        log.timestamp);
+                                return logDate.year == _selectedDate!.year &&
+                                    logDate.month == _selectedDate!.month &&
+                                    logDate.day == _selectedDate!.day;
+                              }).toList()
+                            : logs;
 
-                              context.read<HistoryBloc>().add(
-                                    HistoryEvent.loadHistory(
-                                      startDate: DateTime.fromMillisecondsSinceEpoch(startOfDay),
-                                      endDate: DateTime.fromMillisecondsSinceEpoch(endOfDay),
+                        return Column(
+                          children: [
+                            // Calendar at top
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: CalendarHeatmap(
+                                logs: logs, // Pass all logs for heatmap
+                                onDayTap: (date) {
+                                  setState(() {
+                                    // Toggle selection: if same date, clear filter
+                                    _selectedDate =
+                                        (_selectedDate?.year == date.year &&
+                                                _selectedDate?.month ==
+                                                    date.month &&
+                                                _selectedDate?.day == date.day)
+                                            ? null
+                                            : date;
+                                  });
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Selected date indicator
+                            if (_selectedDate != null)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Logs for ${DateFormat('MMM d, yyyy').format(_selectedDate!)}',
+                                      style: const TextStyle(
+                                        color: AppColors.grey5,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                  );
+                                    const Spacer(),
+                                    TextButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedDate = null;
+                                        });
+                                      },
+                                      child: const Text(
+                                        'Show all',
+                                        style:
+                                            TextStyle(color: AppColors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                              // Switch to list view to show the logs
-                              setState(() {
-                                _viewMode = HistoryViewMode.list;
-                              });
-                            },
-                          ),
+                            const SizedBox(height: 10),
+
+                            // Filtered list
+                            Expanded(
+                              child: displayLogs.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        'No logs found',
+                                        style:
+                                            TextStyle(color: AppColors.grey4),
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      itemCount: displayLogs.length,
+                                      itemBuilder: (context, index) {
+                                        final log = displayLogs[index];
+                                        return Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 12),
+                                          child: _HistoryLogCard(log: log),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
                         );
                       }
 

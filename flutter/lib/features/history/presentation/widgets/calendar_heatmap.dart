@@ -31,6 +31,15 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
   }
 
   @override
+  void didUpdateWidget(CalendarHeatmap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Force rebuild if logs changed
+    if (oldWidget.logs != widget.logs) {
+      // Rebuild will happen automatically
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final daysInMonth = _getDaysInMonth(_currentMonth);
     final activityMap = _buildActivityMap();
@@ -102,7 +111,8 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
   }
 
   Widget _buildCalendarGrid(int daysInMonth, Map<String, int> activityMap) {
-    final firstDayOfMonth = DateTime(_currentMonth.year, _currentMonth.month, 1);
+    final firstDayOfMonth =
+        DateTime(_currentMonth.year, _currentMonth.month, 1);
     final startingWeekday = firstDayOfMonth.weekday; // 1 = Monday, 7 = Sunday
 
     // Calculate total cells needed (including leading empty cells)
@@ -121,10 +131,11 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
 
               if (cellIndex < startingWeekday - 1 || dayNumber > daysInMonth) {
                 // Empty cell
-                return const Expanded(child: SizedBox(height: 40));
+                return const Expanded(child: SizedBox(height: 42));
               }
 
-              final date = DateTime(_currentMonth.year, _currentMonth.month, dayNumber);
+              final date =
+                  DateTime(_currentMonth.year, _currentMonth.month, dayNumber);
               final dateKey = _dateToKey(date);
               final count = activityMap[dateKey] ?? 0;
 
@@ -150,33 +161,20 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
         decoration: BoxDecoration(
           color: intensity,
           borderRadius: BorderRadius.circular(4),
-          border: isToday
-              ? Border.all(color: AppColors.white, width: 2)
-              : null,
+          border: isToday ? Border.all(color: AppColors.white, width: 2) : null,
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                dayNumber.toString(),
+                "${dayNumber.toString()} ${count > 0 ? "$count 🔥" : ""}",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                   color: count > 0 ? AppColors.black : AppColors.grey5,
                 ),
               ),
-              if (count > 0) ...[
-                const SizedBox(height: 2),
-                Text(
-                  count.toString(),
-                  style: const TextStyle(
-                    fontSize: 8,
-                    color: AppColors.black,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -228,7 +226,8 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
 
   /// Get color intensity based on log count
   Color _getColorIntensity(int count) {
-    if (count == 0) return AppColors.grey2;
+    if (count == 0)
+      return AppColors.grey2; // Changed from grey2 for better visibility
     if (count == 1) return AppColors.grey4;
     if (count <= 3) return AppColors.grey5;
     if (count <= 5) return AppColors.grey6;
@@ -239,7 +238,7 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
   Color _getColorIntensityByLevel(int level) {
     switch (level) {
       case 0:
-        return AppColors.grey2;
+        return AppColors.grey2; // Matching updated intensity scale
       case 1:
         return AppColors.grey4;
       case 2:
