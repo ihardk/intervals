@@ -17,6 +17,12 @@ Compare what users log ("working") vs actual app usage ("30% social media") to r
 ### 3. Pomodoro Focus Mode
 Integrate Pomodoro technique (25 min work / 5 min break) with automatic app blocking during work sessions.
 
+### 4. Habit Tracker
+Simple daily habit tracking with streak monitoring and Pomodoro integration.
+
+### 5. Top Priorities (Daily Top 3)
+Minimalist daily priority list (max 3-5) with Pomodoro and logging integration.
+
 ---
 
 ## 🏗️ Architecture Design
@@ -922,7 +928,47 @@ dependencies:
 - [ ] Performance optimization (polling frequency)
 - [ ] Documentation updates
 
-**Total Estimated Time: 15-19 days** (~3-4 weeks)
+### Phase 8: Habits & Priorities (3-4 days)
+- [ ] Create habits and priorities database tables
+- [ ] Implement Habit domain layer (5 use cases + tests)
+- [ ] Implement Priority domain layer (5 use cases + tests)
+- [ ] Build HabitBloc + tests
+- [ ] Build PriorityBloc + tests
+- [ ] Design Habits page UI (list, check-off, stats)
+- [ ] Design Priorities page UI (daily top 3, Pomodoro links)
+- [ ] Integrate habits with Pomodoro (link sessions to habits)
+- [ ] Integrate priorities with Pomodoro (track sessions per priority)
+- [ ] Add habit/priority widgets to launcher home screen
+
+### Phase 9: Launcher (4-5 days)
+- [ ] Add HOME intent filter to AndroidManifest
+- [ ] Integrate device_apps package
+- [ ] Create InstalledAppsService
+- [ ] Build LauncherHomePage with app grid
+- [ ] Add Pomodoro status widget to launcher
+- [ ] Add Habits quick-check widget to launcher
+- [ ] Add Priorities widget to launcher
+- [ ] Filter/dim blocked apps during focus mode
+- [ ] Track all app launches
+- [ ] App categorization (productive vs distracting)
+- [ ] Test launcher selection flow
+
+### Phase 10: Final Integration (2 days)
+- [ ] Connect all features (Pomodoro ↔ Habits ↔ Priorities ↔ Launcher)
+- [ ] End-of-day review screen (priorities completion)
+- [ ] Habit awareness gap calculations
+- [ ] Polish all UIs for consistency
+- [ ] Update navigation (add Habits and Priorities tabs)
+
+### Phase 11: Testing & Polish (2-3 days)
+- [ ] Integration testing (all features working together)
+- [ ] Manual testing on multiple Android devices
+- [ ] Permission flows testing
+- [ ] Performance optimization
+- [ ] Documentation updates
+- [ ] User onboarding flow updates
+
+**Total Estimated Time: 26-35 days** (~5-7 weeks)
 
 ---
 
@@ -1044,17 +1090,31 @@ void configureDependencies() {
 1. ✅ App Blocking - Core functionality for focus enforcement
 2. ✅ Awareness Gap Analysis - Reveals self-deception patterns
 3. ✅ Pomodoro Timer - Structured focus sessions with auto-blocking
+4. ✅ Habit Tracker - Daily habit check-offs with streaks
+5. ✅ Top Priorities - Daily top 3 focus list
+6. ✅ Custom Launcher - Complete home screen replacement
 
 **Key Integration Points:**
-- Pomodoro sessions automatically trigger app blocking
-- Awareness gaps calculated after each manual log
-- Screen time data feeds into Insights dashboard
+- **Pomodoro ↔ App Blocking**: Auto-block distracting apps during work sessions
+- **Pomodoro ↔ Habits**: Link Pomodoro sessions to specific habits
+- **Pomodoro ↔ Priorities**: Track sessions spent on each priority
+- **Habits ↔ Awareness Gap**: Compare checked habits with actual app usage
+- **Priorities ↔ Manual Logs**: Tag logs with priority being worked on
+- **Launcher ↔ Everything**: Home screen shows habits, priorities, Pomodoro status
+- **Awareness gaps** calculated after each manual log
+- **Screen time data** feeds into Insights dashboard
 - All features share minimalist black/white/grey design
 
 ---
 
 **Status:** ✅ Plan approved - Ready to start Phase 1
-**Estimated Completion:** 3-4 weeks from start
+**Estimated Completion:** 5-7 weeks from start
 **Maintains:** Clean Architecture + BDD + 100% test coverage
-**New Components:** 4 tables, 14 use cases, 4 BLoCs, 3 services
+**New Components:**
+- **8 new database tables** (app_usage, block_rules, awareness_gaps, pomodoro_sessions, habits, habit_completions, priorities, priority_pomodoro_links)
+- **24+ use cases** (all with BDD tests)
+- **7 BLoCs** (ScreenTime, AppBlocker, AwarenessGap, Pomodoro, Habit, Priority, Launcher)
+- **5 services** (ScreenTime, AppBlocker, PomodoroTimer, InstalledApps, Launcher)
+- **Custom Launcher** (full home screen replacement)
+- **6 new pages** (Pomodoro, ScreenTime, AppBlocker, Habits, Priorities, Launcher)
 
