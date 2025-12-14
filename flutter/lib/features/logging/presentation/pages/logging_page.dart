@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:interval/features/logging/presentation/widgets/input_mode_selector.dart';
-import 'package:interval/features/logging/presentation/widgets/text_input_section.dart';
-import 'package:interval/features/logging/presentation/widgets/voice_input_section.dart';
+import 'package:interval/features/logging/presentation/widgets/logging_input_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:get_it/get_it.dart';
 
@@ -15,7 +13,6 @@ import '../bloc/logging_state.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../features/voice/presentation/bloc/voice_bloc.dart';
-import '../../../../features/voice/presentation/bloc/voice_event.dart';
 
 class LoggingPage extends StatelessWidget {
   final NotificationAction? initialAction;
@@ -49,64 +46,6 @@ class LoggingView extends StatefulWidget {
 }
 
 class _LoggingViewState extends State<LoggingView> {
-  final TextEditingController _controller = TextEditingController();
-  String _inputMode = 'text'; // 'text' or 'voice'
-  final FocusNode _focusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Handle initial action from notification
-    if (widget.initialAction != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        switch (widget.initialAction!) {
-          case NotificationAction.text:
-            // Set to text mode and focus input
-            setState(() {
-              _inputMode = 'text';
-            });
-            _focusNode.requestFocus();
-            break;
-          case NotificationAction.voice:
-            // Set to voice mode and start recording
-            setState(() {
-              _inputMode = 'voice';
-            });
-            context.read<VoiceBloc>().add(const VoiceEvent.startListening());
-            break;
-          case NotificationAction.skip:
-            // Just open the page normally, no action needed
-            break;
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _handleSubmit() {
-    if (_controller.text.trim().isEmpty) return;
-
-    context.read<LoggingBloc>().add(
-          LoggingEvent.createLog(
-            content: _controller.text.trim(),
-            entryType: _inputMode, // Keep track of how it was entered
-          ),
-        );
-
-    _controller.clear();
-    FocusScope.of(context).unfocus();
-
-    // Reset to text mode after logging? Optional.
-    // setState(() => _inputMode = 'text');
-  }
-
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -159,29 +98,8 @@ class _LoggingViewState extends State<LoggingView> {
                 ),
                 const SizedBox(height: 32),
 
-                // Mode Toggle
-                InputModeSelector(
-                  currentMode: _inputMode,
-                  onModeChanged: (mode) => setState(() => _inputMode = mode),
-                ),
-                const SizedBox(height: 24),
-
-                // Input Section
-                if (_inputMode == 'text')
-                  TextInputSection(
-                    controller: _controller,
-                    onSubmit: _handleSubmit,
-                    focusNode: _focusNode,
-                  )
-                else
-                  VoiceInputSection(
-                    onResult: (text) {
-                      setState(() {
-                        _controller.text = text;
-                      });
-                    },
-                    onSubmit: _handleSubmit,
-                  ),
+                // Input Widget
+                LoggingInputWidget(initialAction: widget.initialAction),
 
                 const SizedBox(height: 40),
 

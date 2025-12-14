@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/widgets.dart'; // For WidgetsFlutterBinding
 import '../../../../core/di/injection.dart' as di;
 import '../../../../shared/navigation/notification_handler.dart';
@@ -38,6 +39,8 @@ class NotificationService {
     try {
       // Initialize timezone database
       tz.initializeTimeZones();
+      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
 
       // Android initialization settings
       const androidSettings =
@@ -61,6 +64,13 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationResponse,
         onDidReceiveBackgroundNotificationResponse: _onNotificationResponse,
       );
+
+      if (Platform.isAndroid) {
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>();
+        await androidPlugin?.requestExactAlarmsPermission();
+      }
 
       return initialized ?? false;
     } catch (e) {
@@ -135,11 +145,6 @@ class NotificationService {
               label: 'What are you doing?',
             ),
           ],
-        ),
-        AndroidNotificationAction(
-          actionVoice,
-          'Voice',
-          showsUserInterface: true,
         ),
         AndroidNotificationAction(
           actionSkip,

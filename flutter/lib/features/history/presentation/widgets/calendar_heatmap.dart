@@ -163,20 +163,38 @@ class _CalendarHeatmapState extends State<CalendarHeatmap> {
           borderRadius: BorderRadius.circular(4),
           border: isToday ? Border.all(color: AppColors.white, width: 2) : null,
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (count == 0)
               Text(
-                "${dayNumber.toString()} ${count > 0 ? "$count 🔥" : ""}",
+                dayNumber.toString(),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                   color: count > 0 ? AppColors.black : AppColors.grey5,
                 ),
               ),
+            if (count > 0) ...[
+              Text(
+                "$dayNumber",
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  color: count > 0 ? AppColors.black : AppColors.grey5,
+                ),
+              ),
+              Text(
+                "$count 🔥",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                  color: count > 0 ? AppColors.black : AppColors.grey5,
+                ),
+              )
             ],
-          ),
+          ],
         ),
       ),
     );

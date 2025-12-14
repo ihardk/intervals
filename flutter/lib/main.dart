@@ -5,6 +5,9 @@ import 'features/settings/domain/usecases/get_app_settings.dart';
 import 'features/notifications/data/services/notification_service.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/navigation/notification_handler.dart';
+import 'package:home_widget/home_widget.dart';
+import 'package:go_router/go_router.dart';
+import 'features/notifications/domain/entities/notification_action.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -37,6 +40,36 @@ Future<void> main() async {
   await notificationService.initialize();
 
   runApp(IntervalApp(router: router));
+
+  // Handle Home Widget Interactions
+  _setupHomeWidget(router);
+}
+
+void _setupHomeWidget(GoRouter router) async {
+  // Handle app launch from widget
+  final uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+  if (uri != null) {
+    _handleWidgetUri(uri, router);
+  }
+
+  // Handle widget clicks while app is running
+  HomeWidget.widgetClicked.listen((uri) {
+    if (uri != null) {
+      _handleWidgetUri(uri, router);
+    }
+  });
+}
+
+void _handleWidgetUri(Uri uri, GoRouter router) {
+  if (uri.host == 'log') {
+    // interval://log/text or interval://log/voice
+    final type = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : null;
+    if (type == 'text') {
+      router.go('/', extra: NotificationAction.text);
+    } else if (type == 'voice') {
+      router.go('/', extra: NotificationAction.voice);
+    }
+  }
 }
 
 class IntervalApp extends StatelessWidget {
