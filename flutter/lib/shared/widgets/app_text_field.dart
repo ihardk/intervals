@@ -8,6 +8,7 @@ class AppTextField extends StatelessWidget {
   final int? maxLength;
   final ValueChanged<String>? onChanged;
   final TextInputType? keyboardType;
+  final FocusNode? focusNode;
   final bool autoFocus;
 
   const AppTextField({
@@ -18,6 +19,7 @@ class AppTextField extends StatelessWidget {
     this.maxLength,
     this.onChanged,
     this.keyboardType,
+    this.focusNode,
     this.autoFocus = false,
   });
 
@@ -29,6 +31,7 @@ class AppTextField extends StatelessWidget {
       maxLines: maxLines,
       maxLength: maxLength,
       keyboardType: keyboardType,
+      focusNode: focusNode,
       autofocus: autoFocus,
       style: const TextStyle(
         color: AppColors.white,

@@ -5,24 +5,28 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:interval/core/database/daos/logs_dao.dart';
 import 'package:interval/core/database/daos/categories_dao.dart';
+import 'package:interval/core/database/daos/settings_dao.dart';
 import 'package:interval/core/database/app_database.dart';
 import 'package:interval/core/errors/failures.dart';
 import 'package:interval/features/logging/data/repositories/log_repository_impl.dart';
 import 'package:interval/features/logging/domain/entities/log.dart' as domain;
 
-@GenerateMocks([LogsDao, CategoriesDao])
+@GenerateMocks([LogsDao, CategoriesDao, SettingsDao])
 import 'log_repository_impl_test.mocks.dart';
 
 void main() {
   late LogRepositoryImpl repository;
   late MockLogsDao mockLogsDao;
   late MockCategoriesDao mockCategoriesDao;
+  late MockSettingsDao mockSettingsDao;
 
   setUp(() {
     mockLogsDao = MockLogsDao();
+    mockSettingsDao = MockSettingsDao();
     mockCategoriesDao = MockCategoriesDao();
     repository = LogRepositoryImpl(
       logsDao: mockLogsDao,
+      settingsDao: mockSettingsDao,
       categoriesDao: mockCategoriesDao,
     );
   });
@@ -38,6 +42,10 @@ void main() {
       'Then should insert log without category and return Right(Log)',
       () async {
         // Arrange
+        // Mock auto-categorize setting as disabled (null or false)
+        when(mockSettingsDao.getSetting('auto_categorize'))
+            .thenAnswer((_) async => null);
+
         final tLogData = LogData(
           id: 'log_001',
           timestamp: tNow,
@@ -84,11 +92,21 @@ void main() {
       'Then should insert log with auto-assigned category',
       () async {
         // Arrange - setup category matching
+        // Mock auto-categorize setting as enabled
+        when(mockSettingsDao.getSetting('auto_categorize')).thenAnswer(
+          (_) async => SettingData(
+            key: 'auto_categorize',
+            value: 'true',
+            type: 'boolean',
+            updatedAt: tNow,
+          ),
+        );
+
         final tCategoryData = CategoryData(
           id: 'cat_work',
           name: 'Work',
-          keywords: '["flutter","coding","development"]',
-          color: '#000000',
+          color: '#4CAF50',
+          keywords: 'flutter,migration,work,coding',
           parentCategory: null,
           isSystem: 1,
           createdAt: tNow,
@@ -289,8 +307,7 @@ void main() {
           metadata: null,
         );
 
-        when(mockLogsDao.getLogById(tLogId))
-            .thenAnswer((_) async => tLogData);
+        when(mockLogsDao.getLogById(tLogId)).thenAnswer((_) async => tLogData);
 
         // Act
         final result = await repository.getLogById(tLogId);

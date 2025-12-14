@@ -24,16 +24,16 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     required this.cancelAll,
     required this.getPendingNotifications,
   }) : super(const NotificationState.initial()) {
-    on<InitializeNotifications>(_onInitialize);
-    on<RequestPermissions>(_onRequestPermissions);
-    on<ScheduleNotification>(_onScheduleNotification);
-    on<ScheduleRecurring>(_onScheduleRecurring);
-    on<CancelAll>(_onCancelAll);
-    on<LoadPendingNotifications>(_onLoadPendingNotifications);
+    on<InitializeNotificationsEvent>(_onInitialize);
+    on<RequestPermissionsEvent>(_onRequestPermissions);
+    on<ScheduleNotificationEvent>(_onScheduleNotification);
+    on<ScheduleRecurringEvent>(_onScheduleRecurring);
+    on<CancelAllEvent>(_onCancelAll);
+    on<LoadPendingNotificationsEvent>(_onLoadPendingNotifications);
   }
 
   Future<void> _onInitialize(
-    InitializeNotifications event,
+    InitializeNotificationsEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());
@@ -50,7 +50,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   Future<void> _onRequestPermissions(
-    RequestPermissions event,
+    RequestPermissionsEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());
@@ -67,7 +67,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   Future<void> _onScheduleNotification(
-    ScheduleNotification event,
+    ScheduleNotificationEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());
@@ -81,7 +81,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   Future<void> _onScheduleRecurring(
-    ScheduleRecurring event,
+    ScheduleRecurringEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());
@@ -98,7 +98,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   Future<void> _onCancelAll(
-    CancelAll event,
+    CancelAllEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());
@@ -112,7 +112,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   Future<void> _onLoadPendingNotifications(
-    LoadPendingNotifications event,
+    LoadPendingNotificationsEvent event,
     Emitter<NotificationState> emit,
   ) async {
     emit(const NotificationState.loading());

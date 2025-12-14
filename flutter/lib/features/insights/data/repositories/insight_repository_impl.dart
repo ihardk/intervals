@@ -175,10 +175,9 @@ class InsightRepositoryImpl implements InsightRepository {
       );
       final totalIntervals = intervals.length;
       final completedIntervals =
-          intervals.where((i) => i.isCompleted).length;
-      final completionRate = totalIntervals > 0
-          ? completedIntervals / totalIntervals
-          : 0.0;
+          intervals.where((i) => i.isCompleted == 1).length;
+      final completionRate =
+          totalIntervals > 0 ? completedIntervals / totalIntervals : 0.0;
 
       // Calculate streak: consecutive days with logs
       final streakDays = await _calculateCurrentStreak(date);
@@ -189,7 +188,7 @@ class InsightRepositoryImpl implements InsightRepository {
       // Calculate skipped intervals (ignored or not completed)
       final skippedIntervals = intervals
           .where((i) =>
-              !i.isCompleted ||
+              i.isCompleted == 0 ||
               i.responseType == 'ignored' ||
               i.responseType == 'skipped')
           .length;

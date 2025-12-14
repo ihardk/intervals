@@ -7,6 +7,7 @@ import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../notifications/domain/entities/notification_action.dart';
 import '../../domain/entities/log.dart';
 import '../bloc/logging_bloc.dart';
 import '../bloc/logging_event.dart';
@@ -16,7 +17,9 @@ import '../../../../features/voice/presentation/bloc/voice_event.dart';
 import '../../../../features/voice/presentation/bloc/voice_state.dart';
 
 class LoggingPage extends StatelessWidget {
-  const LoggingPage({super.key});
+  final NotificationAction? initialAction;
+
+  const LoggingPage({super.key, this.initialAction});
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +33,15 @@ class LoggingPage extends StatelessWidget {
           create: (_) => GetIt.I<VoiceBloc>(),
         ),
       ],
-      child: const LoggingView(),
+      child: LoggingView(initialAction: initialAction),
     );
   }
 }
 
 class LoggingView extends StatefulWidget {
-  const LoggingView({super.key});
+  final NotificationAction? initialAction;
+
+  const LoggingView({super.key, this.initialAction});
 
   @override
   State<LoggingView> createState() => _LoggingViewState();
@@ -45,10 +50,42 @@ class LoggingView extends StatefulWidget {
 class _LoggingViewState extends State<LoggingView> {
   final TextEditingController _controller = TextEditingController();
   String _inputMode = 'text'; // 'text' or 'voice'
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Handle initial action from notification
+    if (widget.initialAction != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        switch (widget.initialAction!) {
+          case NotificationAction.text:
+            // Set to text mode and focus input
+            setState(() {
+              _inputMode = 'text';
+            });
+            _focusNode.requestFocus();
+            break;
+          case NotificationAction.voice:
+            // Set to voice mode and start recording
+            setState(() {
+              _inputMode = 'voice';
+            });
+            context.read<VoiceBloc>().add(const VoiceEvent.startListening());
+            break;
+          case NotificationAction.skip:
+            // Just open the page normally, no action needed
+            break;
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -149,6 +186,7 @@ class _LoggingViewState extends State<LoggingView> {
                     controller: _controller,
                     placeholder: 'Type your activity...',
                     maxLines: 4,
+                    focusNode: _focusNode,
                     maxLength: 500,
                     autoFocus: true,
                   ),
