@@ -1,4 +1,6 @@
 import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
+import '../../features/logging/domain/usecases/create_log.dart';
 import '../../features/notifications/domain/entities/notification_action.dart';
 import 'app_router.dart';
 
@@ -36,6 +38,27 @@ class NotificationHandler {
     if (action != null) {
       // Navigate to logging page with preselected action
       context.go('/', extra: action);
+    }
+  }
+
+  /// Handle inline text input from notification
+  static Future<void> handleNotificationInput(String text) async {
+    try {
+      // We need to access DI here
+      final createLog = GetIt.I<CreateLog>();
+
+      await createLog(
+        content: text,
+        entryType: 'text',
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+        // category & tags will be handled by auto-categorizer or defaults
+        // intervalDuration: 15, // Not part of CreateLog signature?
+        // Checking CreateLog signature again: content, entryType, audioPath, category, tags, mood, timestamp.
+        // It does NOT take intervalDuration. It is inferred or stored in settings?
+        // Log entity usually has duration. Let's check Log entity if needed, but CreateLog usecase is the contract.
+      );
+    } catch (e) {
+      print('Failed to save log from notification input: $e');
     }
   }
 }

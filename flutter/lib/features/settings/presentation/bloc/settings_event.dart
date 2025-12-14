@@ -12,4 +12,8 @@ class SettingsEvent with _$SettingsEvent {
   const factory SettingsEvent.toggleAutoCategorize(bool enabled) =
       ToggleAutoCategorize;
   const factory SettingsEvent.completeOnboarding() = CompleteOnboarding;
+  const factory SettingsEvent.updateActiveHoursStart(int hour) =
+      UpdateActiveHoursStart;
+  const factory SettingsEvent.updateActiveHoursEnd(int hour) =
+      UpdateActiveHoursEnd;
 }

@@ -118,8 +118,10 @@ class MockNotificationRepository extends _i1.Mock
   @override
   _i4.Future<_i2.Either<_i5.Failure, void>> scheduleRecurringNotifications(
     int? intervalDuration,
-    int? count,
-  ) =>
+    int? count, {
+    int? startHour = 9,
+    int? endHour = 21,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #scheduleRecurringNotifications,
@@ -127,6 +129,10 @@ class MockNotificationRepository extends _i1.Mock
             intervalDuration,
             count,
           ],
+          {
+            #startHour: startHour,
+            #endHour: endHour,
+          },
         ),
         returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
             _FakeEither_0<_i5.Failure, void>(
@@ -137,9 +143,42 @@ class MockNotificationRepository extends _i1.Mock
               intervalDuration,
               count,
             ],
+            {
+              #startHour: startHour,
+              #endHour: endHour,
+            },
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, DateTime?>> getNextNotificationTime(
+    int? intervalDuration,
+    int? startHour,
+    int? endHour,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getNextNotificationTime,
+          [
+            intervalDuration,
+            startHour,
+            endHour,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, DateTime?>>.value(
+            _FakeEither_0<_i5.Failure, DateTime?>(
+          this,
+          Invocation.method(
+            #getNextNotificationTime,
+            [
+              intervalDuration,
+              startHour,
+              endHour,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, DateTime?>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, void>> cancelNotification(int? id) =>

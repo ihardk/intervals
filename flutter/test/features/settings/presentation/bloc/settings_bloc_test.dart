@@ -17,6 +17,9 @@ import 'package:interval/features/settings/presentation/bloc/settings_state.dart
 
 import 'package:interval/features/settings/domain/usecases/toggle_voice.dart';
 import 'package:interval/features/settings/domain/usecases/toggle_auto_categorize.dart';
+import 'package:interval/features/settings/domain/usecases/set_active_hours_start.dart';
+import 'package:interval/features/settings/domain/usecases/set_active_hours_end.dart';
+import 'package:interval/features/notifications/domain/usecases/get_next_notification_time.dart';
 
 @GenerateMocks([
   GetAppSettings,
@@ -25,6 +28,9 @@ import 'package:interval/features/settings/domain/usecases/toggle_auto_categoriz
   usecase.CompleteOnboarding,
   ToggleVoiceUseCase,
   ToggleAutoCategorizeUseCase,
+  SetActiveHoursStart,
+  SetActiveHoursEnd,
+  GetNextNotificationTime,
 ])
 import 'settings_bloc_test.mocks.dart';
 
@@ -37,6 +43,11 @@ void main() {
   late MockToggleVoiceUseCase mockToggleVoiceUseCase;
   late MockToggleAutoCategorizeUseCase mockToggleAutoCategorizeUseCase;
 
+  late MockSetActiveHoursStart mockSetActiveHoursStart;
+  late MockSetActiveHoursEnd mockSetActiveHoursEnd;
+
+  late MockGetNextNotificationTime mockGetNextNotificationTime;
+
   setUp(() {
     mockGetAppSettings = MockGetAppSettings();
     mockUpdateIntervalDuration = MockUpdateIntervalDuration();
@@ -44,6 +55,9 @@ void main() {
     mockCompleteOnboarding = MockCompleteOnboarding();
     mockToggleVoiceUseCase = MockToggleVoiceUseCase();
     mockToggleAutoCategorizeUseCase = MockToggleAutoCategorizeUseCase();
+    mockSetActiveHoursStart = MockSetActiveHoursStart();
+    mockSetActiveHoursEnd = MockSetActiveHoursEnd();
+    mockGetNextNotificationTime = MockGetNextNotificationTime();
 
     bloc = SettingsBloc(
       getAppSettings: mockGetAppSettings,
@@ -52,7 +66,14 @@ void main() {
       completeOnboarding: mockCompleteOnboarding,
       toggleVoice: mockToggleVoiceUseCase,
       toggleAutoCategorize: mockToggleAutoCategorizeUseCase,
+      setActiveHoursStart: mockSetActiveHoursStart,
+      setActiveHoursEnd: mockSetActiveHoursEnd,
+      getNextNotificationTime: mockGetNextNotificationTime,
     );
+
+    // Default stub
+    when(mockGetNextNotificationTime(any, any, any))
+        .thenAnswer((_) async => const Right(null));
   });
 
   const tAppSettings = AppSettings(
@@ -150,6 +171,46 @@ void main() {
     ],
     verify: (_) {
       verify(mockCompleteOnboarding());
+      verify(mockGetAppSettings());
+    },
+  );
+
+  blocTest<SettingsBloc, SettingsState>(
+    'emits [SettingsLoading, SettingsLoaded] when UpdateActiveHoursStart is added and success',
+    build: () {
+      when(mockSetActiveHoursStart(any))
+          .thenAnswer((_) async => const Right(null));
+      when(mockGetAppSettings())
+          .thenAnswer((_) async => const Right(tAppSettings));
+      return bloc;
+    },
+    act: (bloc) => bloc.add(const SettingsEvent.updateActiveHoursStart(9)),
+    expect: () => [
+      const SettingsState.loading(),
+      const SettingsState.loaded(tAppSettings),
+    ],
+    verify: (_) {
+      verify(mockSetActiveHoursStart(9));
+      verify(mockGetAppSettings());
+    },
+  );
+
+  blocTest<SettingsBloc, SettingsState>(
+    'emits [SettingsLoading, SettingsLoaded] when UpdateActiveHoursEnd is added and success',
+    build: () {
+      when(mockSetActiveHoursEnd(any))
+          .thenAnswer((_) async => const Right(null));
+      when(mockGetAppSettings())
+          .thenAnswer((_) async => const Right(tAppSettings));
+      return bloc;
+    },
+    act: (bloc) => bloc.add(const SettingsEvent.updateActiveHoursEnd(21)),
+    expect: () => [
+      const SettingsState.loading(),
+      const SettingsState.loaded(tAppSettings),
+    ],
+    verify: (_) {
+      verify(mockSetActiveHoursEnd(21));
       verify(mockGetAppSettings());
     },
   );

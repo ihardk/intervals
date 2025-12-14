@@ -7,6 +7,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/error_state.dart';
+import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../logging/domain/entities/log.dart';
 import '../../../logging/presentation/bloc/logging_bloc.dart';
 import '../../../logging/presentation/bloc/logging_event.dart';
@@ -183,17 +186,20 @@ class _HistoryViewState extends State<HistoryView> {
                 builder: (context, state) {
                   return state.when(
                     initial: () => const SizedBox.shrink(),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (msg) => Center(
-                        child: Text('Error: $msg',
-                            style: const TextStyle(color: AppColors.white))),
+                    loading: () => const LoadingIndicator(),
+                    error: (msg) => ErrorStateWidget(
+                      message: msg,
+                      onRetry: () => context
+                          .read<HistoryBloc>()
+                          .add(const HistoryEvent.refreshHistory()),
+                    ),
                     loaded: (logs, startDate, endDate, searchQuery,
                         filterCategory) {
                       if (logs.isEmpty && _viewMode == HistoryViewMode.list) {
-                        return const Center(
-                            child: Text('No logs found',
-                                style: TextStyle(color: AppColors.grey4)));
+                        return const EmptyStateWidget(
+                          message: 'No logs found',
+                          icon: Icons.history,
+                        );
                       }
 
                       // Show calendar or list based on view mode

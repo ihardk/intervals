@@ -16,6 +16,7 @@ class NotificationState with _$NotificationState {
   const factory NotificationState.pending(
     List<ScheduledNotification> notifications,
   ) = NotificationPending;
-  const factory NotificationState.permissionDenied() = NotificationPermissionDenied;
+  const factory NotificationState.permissionsUpdated(bool granted) =
+      NotificationPermissionsUpdated;
   const factory NotificationState.error(String message) = NotificationError;
 }

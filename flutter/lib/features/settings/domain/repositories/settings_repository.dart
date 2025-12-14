@@ -47,6 +47,12 @@ abstract class SettingsRepository {
   /// Mark onboarding as completed
   Future<Either<Failure, void>> setOnboardingCompleted(bool completed);
 
+  /// Set active hours start time (0-23)
+  Future<Either<Failure, void>> setActiveHoursStart(int hour);
+
+  /// Set active hours end time (0-23)
+  Future<Either<Failure, void>> setActiveHoursEnd(int hour);
+
   /// Watch settings changes (reactive stream)
   Stream<Either<Failure, AppSettings>> watchSettings();
 }

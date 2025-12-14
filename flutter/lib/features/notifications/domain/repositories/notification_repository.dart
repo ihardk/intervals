@@ -19,10 +19,19 @@ abstract class NotificationRepository {
     ScheduleNotificationInput input,
   );
 
-  /// Schedule recurring interval notifications
+  /// Schedule recurring notifications
   Future<Either<Failure, void>> scheduleRecurringNotifications(
     int intervalDuration,
-    int count,
+    int count, {
+    int startHour = 9,
+    int endHour = 21,
+  });
+
+  /// Get the time of the next scheduled notification
+  Future<Either<Failure, DateTime?>> getNextNotificationTime(
+    int intervalDuration,
+    int startHour,
+    int endHour,
   );
 
   /// Cancel a specific notification by ID

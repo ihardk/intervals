@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:interval/core/errors/failures.dart';
-import 'package:interval/features/notifications/domain/entities/scheduled_notification.dart';
+
 import 'package:interval/features/notifications/domain/usecases/cancel_all_notifications.dart';
 import 'package:interval/features/notifications/domain/usecases/get_pending_notifications.dart';
 import 'package:interval/features/notifications/domain/usecases/initialize_notifications.dart';
@@ -14,6 +14,8 @@ import 'package:interval/features/notifications/domain/usecases/schedule_recurri
 import 'package:interval/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:interval/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:interval/features/notifications/presentation/bloc/notification_state.dart';
+import 'package:interval/features/settings/domain/usecases/get_app_settings.dart';
+import 'package:interval/features/settings/domain/entities/app_settings.dart';
 
 @GenerateMocks([
   InitializeNotifications,
@@ -22,33 +24,52 @@ import 'package:interval/features/notifications/presentation/bloc/notification_s
   ScheduleRecurringNotifications,
   CancelAllNotifications,
   GetPendingNotifications,
+  GetAppSettings,
 ])
 import 'notification_bloc_test.mocks.dart';
 
 void main() {
   late NotificationBloc bloc;
-  late MockInitializeNotifications mockInitialize;
+  late MockInitializeNotifications mockInitializeNotifications;
   late MockRequestNotificationPermissions mockRequestPermissions;
   late MockScheduleIntervalNotification mockScheduleNotification;
   late MockScheduleRecurringNotifications mockScheduleRecurring;
   late MockCancelAllNotifications mockCancelAll;
-  late MockGetPendingNotifications mockGetPending;
+  late MockGetPendingNotifications mockGetPendingNotifications;
+  late MockGetAppSettings mockGetAppSettings;
+
+  const tAppSettings = AppSettings(
+    intervalDuration: 900000,
+    notificationsEnabled: true,
+    voiceEnabled: false,
+    dailyReminderTime: '20:00',
+    autoCategorize: true,
+    onboardingCompleted: true,
+    activeHoursStart: 9,
+    activeHoursEnd: 21,
+  );
 
   setUp(() {
-    mockInitialize = MockInitializeNotifications();
+    mockInitializeNotifications = MockInitializeNotifications();
     mockRequestPermissions = MockRequestNotificationPermissions();
     mockScheduleNotification = MockScheduleIntervalNotification();
     mockScheduleRecurring = MockScheduleRecurringNotifications();
     mockCancelAll = MockCancelAllNotifications();
-    mockGetPending = MockGetPendingNotifications();
+    mockGetPendingNotifications = MockGetPendingNotifications();
+    mockGetAppSettings = MockGetAppSettings();
+
+    // Stub getAppSettings to return default settings
+    when(mockGetAppSettings())
+        .thenAnswer((_) async => const Right(tAppSettings));
 
     bloc = NotificationBloc(
-      initializeNotifications: mockInitialize,
+      initializeNotifications: mockInitializeNotifications,
       requestPermissions: mockRequestPermissions,
       scheduleNotification: mockScheduleNotification,
       scheduleRecurring: mockScheduleRecurring,
       cancelAll: mockCancelAll,
-      getPendingNotifications: mockGetPending,
+      getPendingNotifications: mockGetPendingNotifications,
+      getAppSettings: mockGetAppSettings,
     );
   });
 
@@ -60,26 +81,24 @@ void main() {
     blocTest<NotificationBloc, NotificationState>(
       'emits [loading, initialized] when initialization succeeds',
       build: () {
-        when(mockInitialize()).thenAnswer((_) async => const Right(true));
+        when(mockInitializeNotifications())
+            .thenAnswer((_) async => const Right(true));
         return bloc;
       },
       act: (bloc) => bloc.add(const NotificationEvent.initialize()),
       expect: () => [
         const NotificationState.loading(),
-        const NotificationState.initialized(
-          permissionsGranted: true,
-          notificationsEnabled: true,
-        ),
+        const NotificationState.initialized(),
       ],
       verify: (_) {
-        verify(mockInitialize());
+        verify(mockInitializeNotifications());
       },
     );
 
     blocTest<NotificationBloc, NotificationState>(
       'emits [loading, error] when initialization fails',
       build: () {
-        when(mockInitialize()).thenAnswer(
+        when(mockInitializeNotifications()).thenAnswer(
           (_) async => const Left(NotificationFailure('Init failed')),
         );
         return bloc;
@@ -94,7 +113,7 @@ void main() {
 
   group('RequestPermissions', () {
     blocTest<NotificationBloc, NotificationState>(
-      'emits [loading, initialized] when permissions granted',
+      'emits [loading, permissionsUpdated] when permissions granted',
       build: () {
         when(mockRequestPermissions())
             .thenAnswer((_) async => const Right(true));
@@ -103,10 +122,7 @@ void main() {
       act: (bloc) => bloc.add(const NotificationEvent.requestPermissions()),
       expect: () => [
         const NotificationState.loading(),
-        const NotificationState.initialized(
-          permissionsGranted: true,
-          notificationsEnabled: true,
-        ),
+        const NotificationState.permissionsUpdated(true),
       ],
       verify: (_) {
         verify(mockRequestPermissions());

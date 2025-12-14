@@ -4,13 +4,19 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_card.dart';
 import '../../../../features/export/presentation/bloc/export_bloc.dart';
 import '../../../../features/export/presentation/bloc/export_event.dart';
 import '../../../../features/export/presentation/bloc/export_state.dart';
+import '../../../../features/notifications/presentation/bloc/notification_bloc.dart';
+import '../../../../features/notifications/presentation/bloc/notification_event.dart';
+import '../../../../features/notifications/presentation/bloc/notification_state.dart';
 import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
+import '../widgets/interval_duration_picker_dialog.dart';
+import '../widgets/settings_section.dart';
+import '../widgets/settings_toggle_tile.dart';
+import '../widgets/settings_value_tile.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -25,6 +31,9 @@ class SettingsPage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => GetIt.I<ExportBloc>(),
+        ),
+        BlocProvider(
+          create: (_) => GetIt.I<NotificationBloc>(),
         ),
       ],
       child: const SettingsView(),
@@ -66,20 +75,29 @@ class SettingsView extends StatelessWidget {
                             backgroundColor: AppColors.error),
                       );
                     },
+                    loaded: (settings, _) {
+                      // Schedule or Cancel based on settings
+                      final notificationBloc = context.read<NotificationBloc>();
+
+                      if (settings.notificationsEnabled) {
+                        notificationBloc.add(
+                          NotificationEvent.scheduleRecurring(
+                            intervalDuration: settings.intervalDuration,
+                            count: 50, // Schedule next 50 slots
+                          ),
+                        );
+                      } else {
+                        notificationBloc
+                            .add(const NotificationEvent.cancelAll());
+                      }
+                    },
                     orElse: () {},
                   );
                 },
                 builder: (context, state) {
-                  return BlocListener<ExportBloc, ExportState>(
-                    listener: (context, exportState) {
-                      exportState.maybeWhen(
-                        success: (path) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Exported to $path'),
-                                backgroundColor: AppColors.success),
-                          );
-                        },
+                  return BlocListener<NotificationBloc, NotificationState>(
+                    listener: (context, notificationState) {
+                      notificationState.maybeWhen(
                         error: (msg) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -87,140 +105,225 @@ class SettingsView extends StatelessWidget {
                                 backgroundColor: AppColors.error),
                           );
                         },
+                        permissionsUpdated: (granted) {
+                          if (!granted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Notifications disabled. Please enable them in settings.'),
+                                  backgroundColor: AppColors.warning),
+                            );
+                          }
+                        },
                         orElse: () {},
                       );
                     },
-                    child: state.maybeWhen(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      loaded: (settings) => Column(
-                        children: [
-                          // Notifications Section
-                          _Section(
-                            title: 'NOTIFICATIONS',
-                            children: [
-                              _SettingToggle(
-                                label: 'Enable Notifications',
-                                description: 'Receive interval reminders',
-                                value: settings.notificationsEnabled,
-                                onChanged: (val) {
-                                  context.read<SettingsBloc>().add(
-                                        SettingsEvent.toggleNotifications(val),
-                                      );
-                                },
-                              ),
-                              const Divider(color: AppColors.grey2),
-                              _SettingValueRow(
-                                label: 'Interval Duration',
-                                description: 'How often to receive reminders',
-                                value: '${settings.intervalDuration} min',
-                              ),
-                            ],
-                          ),
+                    child: BlocListener<ExportBloc, ExportState>(
+                      listener: (context, exportState) {
+                        exportState.maybeWhen(
+                          success: (path) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Exported to $path'),
+                                  backgroundColor: AppColors.success),
+                            );
+                          },
+                          error: (msg) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(msg),
+                                  backgroundColor: AppColors.error),
+                            );
+                          },
+                          orElse: () {},
+                        );
+                      },
+                      child: state.maybeWhen(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        loaded: (settings, nextNotificationTime) => Column(
+                          children: [
+                            // Notifications Section
+                            SettingsSection(
+                              title: 'NOTIFICATIONS',
+                              children: [
+                                SettingsToggleTile(
+                                  label: 'Enable Notifications',
+                                  description: 'Receive interval reminders',
+                                  value: settings.notificationsEnabled,
+                                  onChanged: (val) {
+                                    context.read<SettingsBloc>().add(
+                                          SettingsEvent.toggleNotifications(
+                                              val),
+                                        );
 
-                          const SizedBox(height: 24),
-
-                          // Features Section
-                          _Section(
-                            title: 'FEATURES',
-                            children: [
-                              _SettingToggle(
-                                label: 'Voice Input',
-                                description:
-                                    'Enable voice recording (Coming Soon)',
-                                value: settings.voiceEnabled,
-                                onChanged: (val) {
-                                  context.read<SettingsBloc>().add(
-                                        SettingsEvent.toggleVoice(val),
-                                      );
-                                },
-                              ),
-                              const Divider(color: AppColors.grey2),
-                              _SettingToggle(
-                                label: 'Auto-Categorize',
-                                description: 'Automatically detect categories',
-                                value: settings.autoCategorize,
-                                onChanged: (val) {
-                                  context.read<SettingsBloc>().add(
-                                        SettingsEvent.toggleAutoCategorize(val),
-                                      );
-                                },
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Data Export Section
-                          _Section(
-                            title: 'DATA EXPORT',
-                            description: 'Export your logs from this month',
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  children: [
-                                    AppButton(
-                                      label: 'Export to CSV',
-                                      isSecondary: true,
-                                      onPress: () {
-                                        context.read<ExportBloc>().add(
-                                              ExportEvent.exportToCsv(
-                                                startDate: DateTime.now()
-                                                    .subtract(const Duration(
-                                                        days: 30))
-                                                    .toIso8601String(),
-                                                endDate: DateTime.now()
-                                                    .toIso8601String(),
-                                              ),
-                                            );
-                                      },
-                                    ),
-                                    const SizedBox(height: 12),
-                                    AppButton(
-                                      label: 'Export to JSON',
-                                      isSecondary: true,
-                                      onPress: () {
-                                        context.read<ExportBloc>().add(
-                                              ExportEvent.exportToJson(
-                                                startDate: DateTime.now()
-                                                    .subtract(const Duration(
-                                                        days: 30))
-                                                    .toIso8601String(),
-                                                endDate: DateTime.now()
-                                                    .toIso8601String(),
-                                              ),
-                                            );
-                                      },
-                                    ),
-                                  ],
+                                    if (val) {
+                                      // Request permissions when enabling
+                                      context.read<NotificationBloc>().add(
+                                            const NotificationEvent
+                                                .requestPermissions(),
+                                          );
+                                    }
+                                  },
                                 ),
-                              ),
-                            ],
-                          ),
+                                const Divider(color: AppColors.grey2),
+                                SettingsValueTile(
+                                  label: 'Interval Duration',
+                                  description: 'How often to receive reminders',
+                                  value:
+                                      '${settings.intervalDurationMinutes} min',
+                                  onTap: () => _showIntervalPicker(
+                                    context,
+                                    settings.intervalDurationMinutes,
+                                  ),
+                                ),
+                                if (nextNotificationTime != null) ...[
+                                  const Divider(color: AppColors.grey2),
+                                  SettingsValueTile(
+                                    label: 'Next Notification',
+                                    value:
+                                        '${nextNotificationTime.hour.toString().padLeft(2, '0')}:${nextNotificationTime.minute.toString().padLeft(2, '0')}',
+                                    showArrow: false,
+                                  ),
+                                ],
+                              ],
+                            ),
 
-                          const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                          // About Section
-                          _Section(
-                            title: 'ABOUT',
-                            children: [
-                              _SettingValueRow(
-                                label: 'Version',
-                                value: '1.0.0',
-                                showArrow: false,
-                              ),
-                              const Divider(color: AppColors.grey2),
-                              _SettingValueRow(
-                                label: 'Build',
-                                value: 'MVP Alpha',
-                                showArrow: false,
-                              ),
-                            ],
-                          ),
-                        ],
+                            // Active Hours Section
+                            SettingsSection(
+                              title: 'ACTIVE HOURS',
+                              description:
+                                  'Only receive notifications during these hours',
+                              children: [
+                                SettingsValueTile(
+                                  label: 'Start Time',
+                                  value: _formatHour(settings.activeHoursStart),
+                                  onTap: () => _showHourPicker(
+                                    context,
+                                    settings.activeHoursStart,
+                                    isStart: true,
+                                  ),
+                                ),
+                                const Divider(color: AppColors.grey2),
+                                SettingsValueTile(
+                                  label: 'End Time',
+                                  value: _formatHour(settings.activeHoursEnd),
+                                  onTap: () => _showHourPicker(
+                                    context,
+                                    settings.activeHoursEnd,
+                                    isStart: false,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Features Section
+                            SettingsSection(
+                              title: 'FEATURES',
+                              children: [
+                                SettingsToggleTile(
+                                  label: 'Voice Input',
+                                  description: 'Enable voice recording',
+                                  value: settings.voiceEnabled,
+                                  onChanged: (val) {
+                                    context.read<SettingsBloc>().add(
+                                          SettingsEvent.toggleVoice(val),
+                                        );
+                                  },
+                                ),
+                                const Divider(color: AppColors.grey2),
+                                SettingsToggleTile(
+                                  label: 'Auto-Categorize',
+                                  description:
+                                      'Automatically detect categories',
+                                  value: settings.autoCategorize,
+                                  onChanged: (val) {
+                                    context.read<SettingsBloc>().add(
+                                          SettingsEvent.toggleAutoCategorize(
+                                              val),
+                                        );
+                                  },
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Data Export Section
+                            SettingsSection(
+                              title: 'DATA EXPORT',
+                              description: 'Export your logs from this month',
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    children: [
+                                      AppButton(
+                                        label: 'Export to CSV',
+                                        isSecondary: true,
+                                        onPress: () {
+                                          context.read<ExportBloc>().add(
+                                                ExportEvent.exportToCsv(
+                                                  startDate: DateTime.now()
+                                                      .subtract(const Duration(
+                                                          days: 30))
+                                                      .toIso8601String(),
+                                                  endDate: DateTime.now()
+                                                      .toIso8601String(),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                      const SizedBox(height: 12),
+                                      AppButton(
+                                        label: 'Export to JSON',
+                                        isSecondary: true,
+                                        onPress: () {
+                                          context.read<ExportBloc>().add(
+                                                ExportEvent.exportToJson(
+                                                  startDate: DateTime.now()
+                                                      .subtract(const Duration(
+                                                          days: 30))
+                                                      .toIso8601String(),
+                                                  endDate: DateTime.now()
+                                                      .toIso8601String(),
+                                                ),
+                                              );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // About Section
+                            SettingsSection(
+                              title: 'ABOUT',
+                              children: [
+                                SettingsValueTile(
+                                  label: 'Version',
+                                  value: '1.0.0',
+                                  showArrow: false,
+                                ),
+                                const Divider(color: AppColors.grey2),
+                                SettingsValueTile(
+                                  label: 'Build',
+                                  value: 'MVP Alpha',
+                                  showArrow: false,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        orElse: () => const SizedBox.shrink(),
                       ),
-                      orElse: () => const SizedBox.shrink(),
                     ),
                   );
                 },
@@ -231,175 +334,61 @@ class SettingsView extends StatelessWidget {
       ),
     );
   }
-}
 
-class _Section extends StatelessWidget {
-  final String title;
-  final String? description;
-  final List<Widget> children;
+  Future<void> _showIntervalPicker(
+      BuildContext context, int currentMinutes) async {
+    final selectedMinutes = await showDialog<int>(
+      context: context,
+      builder: (context) => IntervalDurationPickerDialog(
+        initialDurationMinutes: currentMinutes < 5 ? 15 : currentMinutes,
+      ),
+    );
 
-  const _Section({
-    required this.title,
-    this.description,
-    required this.children,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey4,
-            letterSpacing: 0.5,
-          ),
-        ),
-        if (description != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            description!,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.grey4,
+    if (selectedMinutes != null && context.mounted) {
+      context.read<SettingsBloc>().add(
+            SettingsEvent.updateInterval(
+              selectedMinutes * 60000,
             ),
-          ),
-        ],
-        const SizedBox(height: 8),
-        AppCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: children,
-          ),
-        ),
-      ],
-    );
+          );
+    }
   }
-}
 
-class _SettingToggle extends StatelessWidget {
-  final String label;
-  final String description;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _SettingToggle({
-    required this.label,
-    required this.description,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.grey4,
-                ),
-              ),
-            ],
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.white,
-            activeTrackColor: AppColors.grey3,
-            inactiveThumbColor: AppColors.grey4,
-            inactiveTrackColor: AppColors.grey2,
-          ),
-        ],
-      ),
-    );
+  String _formatHour(int hour) {
+    // Simple 12-hour format or 24-hour based on preference?
+    // Let's use standard default formatting or a manual AM/PM construct.
+    // context is needed for MaterialLocalizations, but this is a static helper or instance method.
+    // We can just do manual formatting for simplicity and consistency.
+    final int h = hour % 12 == 0 ? 12 : hour % 12;
+    final String period = hour < 12 ? 'AM' : 'PM';
+    return '$h:00 $period';
   }
-}
 
-class _SettingValueRow extends StatelessWidget {
-  final String label;
-  final String? description;
-  final String value;
-  final bool showArrow;
-
-  const _SettingValueRow({
-    required this.label,
-    this.description,
-    required this.value,
-    this.showArrow = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.white,
-                ),
-              ),
-              if (description != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  description!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.grey4,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          Row(
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: AppColors.grey4,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (showArrow) ...[
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.grey4,
-                  size: 20,
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
+  Future<void> _showHourPicker(
+    BuildContext context,
+    int currentHour, {
+    required bool isStart,
+  }) async {
+    final TimeOfDay? selectedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: currentHour, minute: 0),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
     );
+
+    if (selectedTime != null && context.mounted) {
+      if (isStart) {
+        context.read<SettingsBloc>().add(
+              SettingsEvent.updateActiveHoursStart(selectedTime.hour),
+            );
+      } else {
+        context.read<SettingsBloc>().add(
+              SettingsEvent.updateActiveHoursEnd(selectedTime.hour),
+            );
+      }
+    }
   }
 }

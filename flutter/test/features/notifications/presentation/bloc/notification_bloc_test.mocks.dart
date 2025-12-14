@@ -3,26 +3,32 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
 import 'package:dartz/dartz.dart' as _i3;
-import 'package:interval/core/errors/failures.dart' as _i6;
+import 'package:interval/core/errors/failures.dart' as _i7;
 import 'package:interval/features/notifications/domain/entities/scheduled_notification.dart'
-    as _i9;
+    as _i10;
 import 'package:interval/features/notifications/domain/repositories/notification_repository.dart'
     as _i2;
 import 'package:interval/features/notifications/domain/usecases/cancel_all_notifications.dart'
-    as _i11;
-import 'package:interval/features/notifications/domain/usecases/get_pending_notifications.dart'
     as _i12;
+import 'package:interval/features/notifications/domain/usecases/get_pending_notifications.dart'
+    as _i13;
 import 'package:interval/features/notifications/domain/usecases/initialize_notifications.dart'
-    as _i4;
+    as _i5;
 import 'package:interval/features/notifications/domain/usecases/request_notification_permissions.dart'
-    as _i7;
-import 'package:interval/features/notifications/domain/usecases/schedule_interval_notification.dart'
     as _i8;
+import 'package:interval/features/notifications/domain/usecases/schedule_interval_notification.dart'
+    as _i9;
 import 'package:interval/features/notifications/domain/usecases/schedule_recurring_notifications.dart'
-    as _i10;
+    as _i11;
+import 'package:interval/features/settings/domain/entities/app_settings.dart'
+    as _i15;
+import 'package:interval/features/settings/domain/repositories/settings_repository.dart'
+    as _i4;
+import 'package:interval/features/settings/domain/usecases/get_app_settings.dart'
+    as _i14;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -59,11 +65,22 @@ class _FakeEither_1<L, R> extends _i1.SmartFake implements _i3.Either<L, R> {
         );
 }
 
+class _FakeSettingsRepository_2 extends _i1.SmartFake
+    implements _i4.SettingsRepository {
+  _FakeSettingsRepository_2(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [InitializeNotifications].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockInitializeNotifications extends _i1.Mock
-    implements _i4.InitializeNotifications {
+    implements _i5.InitializeNotifications {
   MockInitializeNotifications() {
     _i1.throwOnMissingStub(this);
   }
@@ -78,27 +95,27 @@ class MockInitializeNotifications extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, bool>> call() => (super.noSuchMethod(
+  _i6.Future<_i3.Either<_i7.Failure, bool>> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, bool>>.value(
-            _FakeEither_1<_i6.Failure, bool>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, bool>>.value(
+            _FakeEither_1<_i7.Failure, bool>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, bool>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, bool>>);
 }
 
 /// A class which mocks [RequestNotificationPermissions].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRequestNotificationPermissions extends _i1.Mock
-    implements _i7.RequestNotificationPermissions {
+    implements _i8.RequestNotificationPermissions {
   MockRequestNotificationPermissions() {
     _i1.throwOnMissingStub(this);
   }
@@ -113,27 +130,27 @@ class MockRequestNotificationPermissions extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, bool>> call() => (super.noSuchMethod(
+  _i6.Future<_i3.Either<_i7.Failure, bool>> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, bool>>.value(
-            _FakeEither_1<_i6.Failure, bool>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, bool>>.value(
+            _FakeEither_1<_i7.Failure, bool>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, bool>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, bool>>);
 }
 
 /// A class which mocks [ScheduleIntervalNotification].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockScheduleIntervalNotification extends _i1.Mock
-    implements _i8.ScheduleIntervalNotification {
+    implements _i9.ScheduleIntervalNotification {
   MockScheduleIntervalNotification() {
     _i1.throwOnMissingStub(this);
   }
@@ -148,29 +165,29 @@ class MockScheduleIntervalNotification extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(
-          _i9.ScheduleNotificationInput? input) =>
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(
+          _i10.ScheduleNotificationInput? input) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [input],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [input],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [ScheduleRecurringNotifications].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockScheduleRecurringNotifications extends _i1.Mock
-    implements _i10.ScheduleRecurringNotifications {
+    implements _i11.ScheduleRecurringNotifications {
   MockScheduleRecurringNotifications() {
     _i1.throwOnMissingStub(this);
   }
@@ -185,10 +202,12 @@ class MockScheduleRecurringNotifications extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(
     int? intervalDuration,
-    int? count,
-  ) =>
+    int? count, {
+    int? startHour = 9,
+    int? endHour = 21,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
@@ -196,9 +215,13 @@ class MockScheduleRecurringNotifications extends _i1.Mock
             intervalDuration,
             count,
           ],
+          {
+            #startHour: startHour,
+            #endHour: endHour,
+          },
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
@@ -206,16 +229,20 @@ class MockScheduleRecurringNotifications extends _i1.Mock
               intervalDuration,
               count,
             ],
+            {
+              #startHour: startHour,
+              #endHour: endHour,
+            },
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [CancelAllNotifications].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCancelAllNotifications extends _i1.Mock
-    implements _i11.CancelAllNotifications {
+    implements _i12.CancelAllNotifications {
   MockCancelAllNotifications() {
     _i1.throwOnMissingStub(this);
   }
@@ -230,27 +257,27 @@ class MockCancelAllNotifications extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call() => (super.noSuchMethod(
+  _i6.Future<_i3.Either<_i7.Failure, void>> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [GetPendingNotifications].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetPendingNotifications extends _i1.Mock
-    implements _i12.GetPendingNotifications {
+    implements _i13.GetPendingNotifications {
   MockGetPendingNotifications() {
     _i1.throwOnMissingStub(this);
   }
@@ -265,21 +292,58 @@ class MockGetPendingNotifications extends _i1.Mock
       ) as _i2.NotificationRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, List<_i9.ScheduledNotification>>> call() =>
+  _i6.Future<_i3.Either<_i7.Failure, List<_i10.ScheduledNotification>>>
+      call() => (super.noSuchMethod(
+            Invocation.method(
+              #call,
+              [],
+            ),
+            returnValue: _i6.Future<
+                    _i3.Either<_i7.Failure,
+                        List<_i10.ScheduledNotification>>>.value(
+                _FakeEither_1<_i7.Failure, List<_i10.ScheduledNotification>>(
+              this,
+              Invocation.method(
+                #call,
+                [],
+              ),
+            )),
+          ) as _i6.Future<
+              _i3.Either<_i7.Failure, List<_i10.ScheduledNotification>>>);
+}
+
+/// A class which mocks [GetAppSettings].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockGetAppSettings extends _i1.Mock implements _i14.GetAppSettings {
+  MockGetAppSettings() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.SettingsRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeSettingsRepository_2(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i4.SettingsRepository);
+
+  @override
+  _i6.Future<_i3.Either<_i7.Failure, _i15.AppSettings>> call() =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<
-                _i3.Either<_i6.Failure, List<_i9.ScheduledNotification>>>.value(
-            _FakeEither_1<_i6.Failure, List<_i9.ScheduledNotification>>(
+        returnValue:
+            _i6.Future<_i3.Either<_i7.Failure, _i15.AppSettings>>.value(
+                _FakeEither_1<_i7.Failure, _i15.AppSettings>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5
-          .Future<_i3.Either<_i6.Failure, List<_i9.ScheduledNotification>>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, _i15.AppSettings>>);
 }

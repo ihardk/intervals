@@ -7,6 +7,9 @@ part 'settings_state.freezed.dart';
 class SettingsState with _$SettingsState {
   const factory SettingsState.initial() = SettingsInitial;
   const factory SettingsState.loading() = SettingsLoading;
-  const factory SettingsState.loaded(AppSettings settings) = SettingsLoaded;
+  const factory SettingsState.loaded(
+    AppSettings settings, {
+    DateTime? nextNotificationTime,
+  }) = SettingsLoaded;
   const factory SettingsState.error(String message) = SettingsError;
 }

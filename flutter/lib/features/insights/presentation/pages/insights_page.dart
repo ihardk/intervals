@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/error_state.dart';
+import '../../../../shared/widgets/loading_indicator.dart';
 import '../bloc/insights_bloc.dart';
 import '../bloc/insights_event.dart';
 import '../bloc/insights_state.dart';
@@ -59,11 +61,13 @@ class InsightsView extends StatelessWidget {
                 builder: (context, state) {
                   return state.when(
                     initial: () => const SizedBox.shrink(),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (msg) => Center(
-                        child: Text('Error: $msg',
-                            style: const TextStyle(color: AppColors.white))),
+                    loading: () => const LoadingIndicator(),
+                    error: (msg) => ErrorStateWidget(
+                      message: msg,
+                      onRetry: () => context
+                          .read<InsightsBloc>()
+                          .add(const InsightsEvent.loadInsights()),
+                    ),
                     loaded: (insight, topActivities, completionRate) {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,10 +87,9 @@ class InsightsView extends StatelessWidget {
                               ),
                               _StatCard(
                                 title: 'CATEGORIZED',
-                                value: insight.data.topActivities
-                                    .fold<int>(
-                                        0, (sum, item) => sum + item.count)
-                                    .toString(),
+                                value: insight.data.totalLogs > 0
+                                    ? '${(insight.data.topActivities.fold<int>(0, (sum, item) => sum + item.count) / insight.data.totalLogs * 100).toInt()}%'
+                                    : '0%',
                               ),
                               _StatCard(
                                 title: 'COMPLETION',
@@ -275,38 +278,6 @@ class InsightsView extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static Widget _bottomTitles(double value, TitleMeta meta) {
-    const style = TextStyle(color: AppColors.grey4, fontSize: 10);
-    String text;
-    switch (value.toInt()) {
-      case 0:
-        text = 'M';
-        break;
-      case 1:
-        text = 'T';
-        break;
-      case 2:
-        text = 'W';
-        break;
-      case 3:
-        text = 'T';
-        break;
-      case 4:
-        text = 'F';
-        break;
-      case 5:
-        text = 'S';
-        break;
-      case 6:
-        text = 'S';
-        break;
-      default:
-        text = '';
-    }
-    return SideTitleWidget(
-        axisSide: meta.axisSide, child: Text(text, style: style));
   }
 
   static BarChartGroupData _makeGroupData(int x, double y) {

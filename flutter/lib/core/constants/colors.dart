@@ -22,6 +22,7 @@ class AppColors {
   static const background = white;
   static const surface = white;
   static const error = grey2;
+  static const warning = Color(0xFFF59E0B); // Orange
   static const success = Color(0xFF10B981); // Green from categoryBreak
   static const textPrimary = black;
   static const textSecondary = grey3;

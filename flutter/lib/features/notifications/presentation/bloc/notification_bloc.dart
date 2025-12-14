@@ -5,6 +5,7 @@ import '../../domain/usecases/initialize_notifications.dart';
 import '../../domain/usecases/request_notification_permissions.dart';
 import '../../domain/usecases/schedule_interval_notification.dart';
 import '../../domain/usecases/schedule_recurring_notifications.dart';
+import '../../../settings/domain/usecases/get_app_settings.dart';
 import 'notification_event.dart';
 import 'notification_state.dart';
 
@@ -15,6 +16,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   final ScheduleRecurringNotifications scheduleRecurring;
   final CancelAllNotifications cancelAll;
   final GetPendingNotifications getPendingNotifications;
+  final GetAppSettings getAppSettings;
 
   NotificationBloc({
     required this.initializeNotifications,
@@ -23,6 +25,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     required this.scheduleRecurring,
     required this.cancelAll,
     required this.getPendingNotifications,
+    required this.getAppSettings,
   }) : super(const NotificationState.initial()) {
     on<InitializeNotificationsEvent>(_onInitialize);
     on<RequestPermissionsEvent>(_onRequestPermissions);
@@ -31,6 +34,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<CancelAllEvent>(_onCancelAll);
     on<LoadPendingNotificationsEvent>(_onLoadPendingNotifications);
   }
+
+  // ... (previous methods)
 
   Future<void> _onInitialize(
     InitializeNotificationsEvent event,
@@ -42,10 +47,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
     result.fold(
       (failure) => emit(NotificationState.error(failure.message)),
-      (success) => emit(NotificationState.initialized(
-        permissionsGranted: success,
-        notificationsEnabled: success,
-      )),
+      (_) => emit(const NotificationState.initialized()),
     );
   }
 
@@ -58,11 +60,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     final result = await requestPermissions();
 
     result.fold(
-      (failure) => emit(const NotificationState.permissionDenied()),
-      (granted) => emit(NotificationState.initialized(
-        permissionsGranted: granted,
-        notificationsEnabled: granted,
-      )),
+      (failure) => emit(NotificationState.error(failure.message)),
+      (granted) => emit(NotificationState.permissionsUpdated(granted)),
     );
   }
 
@@ -86,9 +85,28 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     emit(const NotificationState.loading());
 
+    // Get current settings to find active hours
+    final settingsResult = await getAppSettings();
+    int startHour = 9;
+    int endHour = 21;
+
+    settingsResult.fold(
+      (failure) {
+        // Fallback to defaults if settings fail
+        startHour = 9;
+        endHour = 21;
+      },
+      (settings) {
+        startHour = settings.activeHoursStart;
+        endHour = settings.activeHoursEnd;
+      },
+    );
+
     final result = await scheduleRecurring(
       event.intervalDuration,
       event.count,
+      startHour: startHour,
+      endHour: endHour,
     );
 
     result.fold(

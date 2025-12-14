@@ -47,7 +47,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
       return Right(settingsMap);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get all settings: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get all settings: ${e.toString()}'));
     }
   }
 
@@ -59,7 +60,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
       await settingsDao.updateSettings(settings);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to update settings: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to update settings: ${e.toString()}'));
     }
   }
 
@@ -74,18 +76,25 @@ class SettingsRepositoryImpl implements SettingsRepository {
       }
 
       final appSettings = AppSettings(
-        intervalDuration: int.tryParse(settingsMap['interval_duration'] ?? '900000') ?? 900000,
+        intervalDuration:
+            int.tryParse(settingsMap['interval_duration'] ?? '900000') ??
+                900000,
         notificationsEnabled: settingsMap['notifications_enabled'] == 'true',
         voiceEnabled: settingsMap['voice_enabled'] == 'true',
         theme: settingsMap['theme'] ?? 'light',
         dailyReminderTime: settingsMap['daily_reminder_time'] ?? '20:00',
         autoCategorize: settingsMap['auto_categorize'] == 'true',
         onboardingCompleted: settingsMap['onboarding_completed'] == 'true',
+        activeHoursStart:
+            int.tryParse(settingsMap['active_hours_start'] ?? '9') ?? 9,
+        activeHoursEnd:
+            int.tryParse(settingsMap['active_hours_end'] ?? '21') ?? 21,
       );
 
       return Right(appSettings);
     } catch (e) {
-      return Left(DatabaseFailure('Failed to get app settings: ${e.toString()}'));
+      return Left(
+          DatabaseFailure('Failed to get app settings: ${e.toString()}'));
     }
   }
 
@@ -153,6 +162,24 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
+  Future<Either<Failure, void>> setActiveHoursStart(int hour) async {
+    return setSetting(
+      key: 'active_hours_start',
+      value: hour.toString(),
+      type: 'int',
+    );
+  }
+
+  @override
+  Future<Either<Failure, void>> setActiveHoursEnd(int hour) async {
+    return setSetting(
+      key: 'active_hours_end',
+      value: hour.toString(),
+      type: 'int',
+    );
+  }
+
+  @override
   Stream<Either<Failure, AppSettings>> watchSettings() {
     try {
       return settingsDao.watchAllSettings().asyncMap(
@@ -164,13 +191,20 @@ class SettingsRepositoryImpl implements SettingsRepository {
           }
 
           return Right(AppSettings(
-            intervalDuration: int.tryParse(settingsMap['interval_duration'] ?? '900000') ?? 900000,
-            notificationsEnabled: settingsMap['notifications_enabled'] == 'true',
+            intervalDuration:
+                int.tryParse(settingsMap['interval_duration'] ?? '900000') ??
+                    900000,
+            notificationsEnabled:
+                settingsMap['notifications_enabled'] == 'true',
             voiceEnabled: settingsMap['voice_enabled'] == 'true',
             theme: settingsMap['theme'] ?? 'light',
             dailyReminderTime: settingsMap['daily_reminder_time'] ?? '20:00',
             autoCategorize: settingsMap['auto_categorize'] == 'true',
             onboardingCompleted: settingsMap['onboarding_completed'] == 'true',
+            activeHoursStart:
+                int.tryParse(settingsMap['active_hours_start'] ?? '9') ?? 9,
+            activeHoursEnd:
+                int.tryParse(settingsMap['active_hours_end'] ?? '21') ?? 21,
           ));
         },
       );

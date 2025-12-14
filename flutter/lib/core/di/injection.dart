@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:interval/features/notifications/domain/usecases/get_next_notification_time.dart';
 import '../database/app_database.dart';
 import '../../features/logging/data/repositories/log_repository_impl.dart';
 import '../../features/logging/data/repositories/interval_repository_impl.dart';
@@ -51,6 +52,8 @@ import '../../features/notifications/presentation/bloc/notification_bloc.dart';
 
 import '../../features/settings/domain/usecases/toggle_voice.dart';
 import '../../features/settings/domain/usecases/toggle_auto_categorize.dart';
+import '../../features/settings/domain/usecases/set_active_hours_start.dart';
+import '../../features/settings/domain/usecases/set_active_hours_end.dart';
 
 // Use Case Imports
 import '../../features/categories/domain/usecases/get_all_categories.dart';
@@ -168,6 +171,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CompleteOnboarding(sl()));
   sl.registerLazySingleton(() => ToggleVoiceUseCase(sl()));
   sl.registerLazySingleton(() => ToggleAutoCategorizeUseCase(sl()));
+  sl.registerLazySingleton(() => SetActiveHoursStart(sl()));
+  sl.registerLazySingleton(() => SetActiveHoursEnd(sl()));
 
   // Categories Use Cases
   sl.registerLazySingleton(() => GetAllCategories(sl()));
@@ -196,6 +201,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ScheduleRecurringNotifications(sl()));
   sl.registerLazySingleton(() => CancelAllNotifications(sl()));
   sl.registerLazySingleton(() => GetPendingNotifications(sl()));
+  sl.registerLazySingleton(() => GetNextNotificationTime(sl()));
 
   // ============== BLOCS ==============
   // Registered as factories so each screen gets a new instance
@@ -221,10 +227,13 @@ Future<void> init() async {
   sl.registerFactory(() => SettingsBloc(
         getAppSettings: sl(),
         updateIntervalDuration: sl(),
+        getNextNotificationTime: sl(),
         toggleNotifications: sl(),
         completeOnboarding: sl(),
         toggleVoice: sl(),
         toggleAutoCategorize: sl(),
+        setActiveHoursStart: sl(),
+        setActiveHoursEnd: sl(),
       ));
 
   sl.registerFactory(() => StreaksBloc(
@@ -254,6 +263,7 @@ Future<void> init() async {
         scheduleRecurring: sl(),
         cancelAll: sl(),
         getPendingNotifications: sl(),
+        getAppSettings: sl(),
       ));
 
   // Singleton instance

@@ -21,11 +21,31 @@ class EditLogDialog extends StatefulWidget {
 class _EditLogDialogState extends State<EditLogDialog> {
   late TextEditingController _contentController;
   final _formKey = GlobalKey<FormState>();
+  String? _selectedCategory;
+
+  // Default categories
+  final List<String> _categories = [
+    'Work',
+    'Rest',
+    'Exercise',
+    'Social',
+    'Entertainment',
+    'Sleep',
+    'Deep Work',
+    'Shallow Work',
+  ];
 
   @override
   void initState() {
     super.initState();
     _contentController = TextEditingController(text: widget.log.content);
+    _selectedCategory = widget.log.category;
+
+    // If current category is not in default list and not null, add it
+    if (_selectedCategory != null && !_categories.contains(_selectedCategory)) {
+      _categories.add(_selectedCategory!);
+    }
+    _categories.sort();
   }
 
   @override
@@ -38,6 +58,7 @@ class _EditLogDialogState extends State<EditLogDialog> {
     if (_formKey.currentState!.validate()) {
       final updatedLog = widget.log.copyWith(
         content: _contentController.text.trim(),
+        category: _selectedCategory,
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -94,6 +115,36 @@ class _EditLogDialogState extends State<EditLogDialog> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  labelStyle: const TextStyle(color: AppColors.grey4),
+                  filled: true,
+                  fillColor: AppColors.grey2,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                dropdownColor: AppColors.grey2,
+                style: const TextStyle(color: AppColors.white),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedCategory = newValue;
+                  });
+                },
+                icon: const Icon(Icons.arrow_drop_down, color: AppColors.grey4),
               ),
               const SizedBox(height: 24),
               Row(

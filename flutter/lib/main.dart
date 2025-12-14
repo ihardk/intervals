@@ -30,8 +30,11 @@ Future<void> main() async {
   final notificationService = di.sl<NotificationService>();
   notificationService.setupNavigationCallbacks(
     onTap: (_) => NotificationHandler.handleNotificationTap(),
-    onAction: (actionId) => NotificationHandler.handleNotificationAction(actionId),
+    onAction: (actionId) =>
+        NotificationHandler.handleNotificationAction(actionId),
+    onInput: (text) => NotificationHandler.handleNotificationInput(text),
   );
+  await notificationService.initialize();
 
   runApp(IntervalApp(router: router));
 }

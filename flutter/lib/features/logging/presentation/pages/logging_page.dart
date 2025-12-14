@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:interval/features/logging/presentation/widgets/input_mode_selector.dart';
+import 'package:interval/features/logging/presentation/widgets/text_input_section.dart';
+import 'package:interval/features/logging/presentation/widgets/voice_input_section.dart';
 import 'package:intl/intl.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../../../core/constants/colors.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_card.dart';
-import '../../../../shared/widgets/app_text_field.dart';
 import '../../../notifications/domain/entities/notification_action.dart';
 import '../../domain/entities/log.dart';
 import '../bloc/logging_bloc.dart';
 import '../bloc/logging_event.dart';
 import '../bloc/logging_state.dart';
+import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../features/voice/presentation/bloc/voice_bloc.dart';
 import '../../../../features/voice/presentation/bloc/voice_event.dart';
-import '../../../../features/voice/presentation/bloc/voice_state.dart';
 
 class LoggingPage extends StatelessWidget {
   final NotificationAction? initialAction;
@@ -159,55 +160,28 @@ class _LoggingViewState extends State<LoggingView> {
                 const SizedBox(height: 32),
 
                 // Mode Toggle
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ModeButton(
-                        label: '✍️ Text',
-                        isActive: _inputMode == 'text',
-                        onTap: () => setState(() => _inputMode = 'text'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ModeButton(
-                        label: '🎤 Voice',
-                        isActive: _inputMode == 'voice',
-                        onTap: () => setState(() => _inputMode = 'voice'),
-                      ),
-                    ),
-                  ],
+                InputModeSelector(
+                  currentMode: _inputMode,
+                  onModeChanged: (mode) => setState(() => _inputMode = mode),
                 ),
                 const SizedBox(height: 24),
 
                 // Input Section
-                if (_inputMode == 'text') ...[
-                  AppTextField(
+                if (_inputMode == 'text')
+                  TextInputSection(
                     controller: _controller,
-                    placeholder: 'Type your activity...',
-                    maxLines: 4,
+                    onSubmit: _handleSubmit,
                     focusNode: _focusNode,
-                    maxLength: 500,
-                    autoFocus: true,
-                  ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    label: 'Log Activity',
-                    onPress: _handleSubmit,
-                  ),
-                ] else ...[
-                  // Voice Input UI
-                  _VoiceInputSection(
+                  )
+                else
+                  VoiceInputSection(
                     onResult: (text) {
                       setState(() {
                         _controller.text = text;
-                        // Optional: Switch back to text to let user edit?
-                        // _inputMode = 'text';
                       });
                     },
                     onSubmit: _handleSubmit,
                   ),
-                ],
 
                 const SizedBox(height: 40),
 
@@ -240,132 +214,8 @@ class _LoggingViewState extends State<LoggingView> {
     return state.maybeWhen(
       loaded: (logs, _, __) => _LogsList(logs: logs),
       success: (_, logs) => _LogsList(logs: logs),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const LoadingIndicator(),
       orElse: () => const SizedBox.shrink(),
-    );
-  }
-}
-
-class _VoiceInputSection extends StatelessWidget {
-  final Function(String) onResult;
-  final VoidCallback onSubmit;
-
-  const _VoiceInputSection({
-    required this.onResult,
-    required this.onSubmit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<VoiceBloc, VoiceState>(
-      listener: (context, state) {
-        state.maybeWhen(
-          success: (text) {
-            onResult(text);
-          },
-          listening: (partial) {
-            // Live update if needed, or wait for success
-            if (partial.isNotEmpty) onResult(partial);
-          },
-          failure: (msg) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg), backgroundColor: AppColors.error),
-            );
-          },
-          orElse: () {},
-        );
-      },
-      builder: (context, state) {
-        final isListening = state.maybeWhen(
-          listening: (_) => true,
-          orElse: () => false,
-        );
-
-        final text = state.maybeWhen(
-          listening: (t) => t,
-          success: (t) => t,
-          orElse: () => 'Tap microphone to start recording',
-        );
-
-        return AppCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  if (isListening) {
-                    context
-                        .read<VoiceBloc>()
-                        .add(const VoiceEvent.stopListening());
-                  } else {
-                    context
-                        .read<VoiceBloc>()
-                        .add(const VoiceEvent.startListening());
-                  }
-                },
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: isListening ? AppColors.error : AppColors.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      if (isListening)
-                        BoxShadow(
-                          color: AppColors.error.withOpacity(0.5),
-                          blurRadius: 20,
-                          spreadRadius: 5,
-                        ),
-                    ],
-                  ),
-                  child: Icon(
-                    isListening ? Icons.stop : Icons.mic,
-                    size: 40,
-                    color: AppColors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                isListening
-                    ? 'Listening...'
-                    : (text.isEmpty ? 'Tap to Record' : 'Result'),
-                style: const TextStyle(
-                  color: AppColors.grey4,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.grey1,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  text.isEmpty ? 'Speak clearly...' : text,
-                  style: TextStyle(
-                    color: text.isEmpty ? AppColors.grey5 : AppColors.white,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              if (!isListening &&
-                  text.isNotEmpty &&
-                  text != 'Tap microphone to start recording') ...[
-                const SizedBox(height: 24),
-                AppButton(
-                  label: 'Log This',
-                  onPress: onSubmit,
-                ),
-              ],
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -457,43 +307,6 @@ class _LogsList extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _ModeButton extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _ModeButton({
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.white : AppColors.grey1,
-          borderRadius: BorderRadius.circular(4),
-          border: isActive
-              ? Border.all(color: AppColors.white)
-              : Border.all(color: AppColors.grey2),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isActive ? AppColors.black : AppColors.grey4,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
     );
   }
 }

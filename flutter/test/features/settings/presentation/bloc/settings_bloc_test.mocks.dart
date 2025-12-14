@@ -3,26 +3,34 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
 import 'package:dartz/dartz.dart' as _i3;
-import 'package:interval/core/errors/failures.dart' as _i6;
+import 'package:interval/core/errors/failures.dart' as _i7;
+import 'package:interval/features/notifications/domain/repositories/notification_repository.dart'
+    as _i4;
+import 'package:interval/features/notifications/domain/usecases/get_next_notification_time.dart'
+    as _i16;
 import 'package:interval/features/settings/domain/entities/app_settings.dart'
-    as _i7;
+    as _i8;
 import 'package:interval/features/settings/domain/repositories/settings_repository.dart'
     as _i2;
 import 'package:interval/features/settings/domain/usecases/complete_onboarding.dart'
-    as _i10;
-import 'package:interval/features/settings/domain/usecases/get_app_settings.dart'
-    as _i4;
-import 'package:interval/features/settings/domain/usecases/toggle_auto_categorize.dart'
-    as _i12;
-import 'package:interval/features/settings/domain/usecases/toggle_notifications.dart'
-    as _i9;
-import 'package:interval/features/settings/domain/usecases/toggle_voice.dart'
     as _i11;
+import 'package:interval/features/settings/domain/usecases/get_app_settings.dart'
+    as _i5;
+import 'package:interval/features/settings/domain/usecases/set_active_hours_end.dart'
+    as _i15;
+import 'package:interval/features/settings/domain/usecases/set_active_hours_start.dart'
+    as _i14;
+import 'package:interval/features/settings/domain/usecases/toggle_auto_categorize.dart'
+    as _i13;
+import 'package:interval/features/settings/domain/usecases/toggle_notifications.dart'
+    as _i10;
+import 'package:interval/features/settings/domain/usecases/toggle_voice.dart'
+    as _i12;
 import 'package:interval/features/settings/domain/usecases/update_interval_duration.dart'
-    as _i8;
+    as _i9;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -59,10 +67,21 @@ class _FakeEither_1<L, R> extends _i1.SmartFake implements _i3.Either<L, R> {
         );
 }
 
+class _FakeNotificationRepository_2 extends _i1.SmartFake
+    implements _i4.NotificationRepository {
+  _FakeNotificationRepository_2(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
+}
+
 /// A class which mocks [GetAppSettings].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGetAppSettings extends _i1.Mock implements _i4.GetAppSettings {
+class MockGetAppSettings extends _i1.Mock implements _i5.GetAppSettings {
   MockGetAppSettings() {
     _i1.throwOnMissingStub(this);
   }
@@ -77,28 +96,28 @@ class MockGetAppSettings extends _i1.Mock implements _i4.GetAppSettings {
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, _i7.AppSettings>> call() =>
+  _i6.Future<_i3.Either<_i7.Failure, _i8.AppSettings>> call() =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, _i7.AppSettings>>.value(
-            _FakeEither_1<_i6.Failure, _i7.AppSettings>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, _i8.AppSettings>>.value(
+            _FakeEither_1<_i7.Failure, _i8.AppSettings>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, _i7.AppSettings>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, _i8.AppSettings>>);
 }
 
 /// A class which mocks [UpdateIntervalDuration].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockUpdateIntervalDuration extends _i1.Mock
-    implements _i8.UpdateIntervalDuration {
+    implements _i9.UpdateIntervalDuration {
   MockUpdateIntervalDuration() {
     _i1.throwOnMissingStub(this);
   }
@@ -113,28 +132,28 @@ class MockUpdateIntervalDuration extends _i1.Mock
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(int? durationMs) =>
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(int? durationMs) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [durationMs],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [durationMs],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [ToggleNotifications].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockToggleNotifications extends _i1.Mock
-    implements _i9.ToggleNotifications {
+    implements _i10.ToggleNotifications {
   MockToggleNotifications() {
     _i1.throwOnMissingStub(this);
   }
@@ -149,28 +168,28 @@ class MockToggleNotifications extends _i1.Mock
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(bool? enabled) =>
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(bool? enabled) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [enabled],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [enabled],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [CompleteOnboarding].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockCompleteOnboarding extends _i1.Mock
-    implements _i10.CompleteOnboarding {
+    implements _i11.CompleteOnboarding {
   MockCompleteOnboarding() {
     _i1.throwOnMissingStub(this);
   }
@@ -185,27 +204,27 @@ class MockCompleteOnboarding extends _i1.Mock
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call() => (super.noSuchMethod(
+  _i6.Future<_i3.Either<_i7.Failure, void>> call() => (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [ToggleVoiceUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockToggleVoiceUseCase extends _i1.Mock
-    implements _i11.ToggleVoiceUseCase {
+    implements _i12.ToggleVoiceUseCase {
   MockToggleVoiceUseCase() {
     _i1.throwOnMissingStub(this);
   }
@@ -220,28 +239,28 @@ class MockToggleVoiceUseCase extends _i1.Mock
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(bool? isEnabled) =>
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(bool? isEnabled) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [isEnabled],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [isEnabled],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
 }
 
 /// A class which mocks [ToggleAutoCategorizeUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockToggleAutoCategorizeUseCase extends _i1.Mock
-    implements _i12.ToggleAutoCategorizeUseCase {
+    implements _i13.ToggleAutoCategorizeUseCase {
   MockToggleAutoCategorizeUseCase() {
     _i1.throwOnMissingStub(this);
   }
@@ -256,19 +275,138 @@ class MockToggleAutoCategorizeUseCase extends _i1.Mock
       ) as _i2.SettingsRepository);
 
   @override
-  _i5.Future<_i3.Either<_i6.Failure, void>> call(bool? isEnabled) =>
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(bool? isEnabled) =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [isEnabled],
         ),
-        returnValue: _i5.Future<_i3.Either<_i6.Failure, void>>.value(
-            _FakeEither_1<_i6.Failure, void>(
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
           this,
           Invocation.method(
             #call,
             [isEnabled],
           ),
         )),
-      ) as _i5.Future<_i3.Either<_i6.Failure, void>>);
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
+}
+
+/// A class which mocks [SetActiveHoursStart].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSetActiveHoursStart extends _i1.Mock
+    implements _i14.SetActiveHoursStart {
+  MockSetActiveHoursStart() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.SettingsRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeSettingsRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.SettingsRepository);
+
+  @override
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(int? hour) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [hour],
+        ),
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
+          this,
+          Invocation.method(
+            #call,
+            [hour],
+          ),
+        )),
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
+}
+
+/// A class which mocks [SetActiveHoursEnd].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSetActiveHoursEnd extends _i1.Mock implements _i15.SetActiveHoursEnd {
+  MockSetActiveHoursEnd() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i2.SettingsRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeSettingsRepository_0(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i2.SettingsRepository);
+
+  @override
+  _i6.Future<_i3.Either<_i7.Failure, void>> call(int? hour) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [hour],
+        ),
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, void>>.value(
+            _FakeEither_1<_i7.Failure, void>(
+          this,
+          Invocation.method(
+            #call,
+            [hour],
+          ),
+        )),
+      ) as _i6.Future<_i3.Either<_i7.Failure, void>>);
+}
+
+/// A class which mocks [GetNextNotificationTime].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockGetNextNotificationTime extends _i1.Mock
+    implements _i16.GetNextNotificationTime {
+  MockGetNextNotificationTime() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.NotificationRepository get repository => (super.noSuchMethod(
+        Invocation.getter(#repository),
+        returnValue: _FakeNotificationRepository_2(
+          this,
+          Invocation.getter(#repository),
+        ),
+      ) as _i4.NotificationRepository);
+
+  @override
+  _i6.Future<_i3.Either<_i7.Failure, DateTime?>> call(
+    int? intervalDuration,
+    int? startHour,
+    int? endHour,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #call,
+          [
+            intervalDuration,
+            startHour,
+            endHour,
+          ],
+        ),
+        returnValue: _i6.Future<_i3.Either<_i7.Failure, DateTime?>>.value(
+            _FakeEither_1<_i7.Failure, DateTime?>(
+          this,
+          Invocation.method(
+            #call,
+            [
+              intervalDuration,
+              startHour,
+              endHour,
+            ],
+          ),
+        )),
+      ) as _i6.Future<_i3.Either<_i7.Failure, DateTime?>>);
 }

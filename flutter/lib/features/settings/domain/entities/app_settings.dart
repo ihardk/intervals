@@ -29,6 +29,12 @@ class AppSettings with _$AppSettings {
 
     /// Whether onboarding has been completed
     @Default(false) bool onboardingCompleted,
+
+    /// Start of active hours (0-23)
+    @Default(9) int activeHoursStart,
+
+    /// End of active hours (0-23)
+    @Default(21) int activeHoursEnd,
   }) = _AppSettings;
 
   const AppSettings._();

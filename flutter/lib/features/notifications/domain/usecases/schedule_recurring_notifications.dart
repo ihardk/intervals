@@ -11,7 +11,17 @@ class ScheduleRecurringNotifications {
   /// Schedule recurring notifications
   /// [intervalDuration] - Duration in milliseconds (900000 for 15min, 1800000 for 30min)
   /// [count] - Number of notifications to schedule ahead
-  Future<Either<Failure, void>> call(int intervalDuration, int count) {
-    return repository.scheduleRecurringNotifications(intervalDuration, count);
+  Future<Either<Failure, void>> call(
+    int intervalDuration,
+    int count, {
+    int startHour = 9,
+    int endHour = 21,
+  }) {
+    return repository.scheduleRecurringNotifications(
+      intervalDuration,
+      count,
+      startHour: startHour,
+      endHour: endHour,
+    );
   }
 }

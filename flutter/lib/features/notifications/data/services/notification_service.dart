@@ -2,6 +2,9 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:flutter/widgets.dart'; // For WidgetsFlutterBinding
+import '../../../../core/di/injection.dart' as di;
+import '../../../../shared/navigation/notification_handler.dart';
 
 /// Notification service wrapper for flutter_local_notifications
 /// Handles platform-specific notification operations
@@ -28,6 +31,7 @@ class NotificationService {
   // Callback for handling notification taps
   Function(String?)? onNotificationTap;
   Function(String?)? onNotificationAction;
+  Function(String)? onNotificationInput;
 
   /// Initialize notification service
   Future<bool> initialize() async {
@@ -36,7 +40,8 @@ class NotificationService {
       tz.initializeTimeZones();
 
       // Android initialization settings
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
       // iOS initialization settings
       const iosSettings = DarwinInitializationSettings(
@@ -77,8 +82,8 @@ class NotificationService {
             );
         return result ?? false;
       } else if (Platform.isAndroid) {
-        final androidPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         final result = await androidPlugin?.requestNotificationsPermission();
         return result ?? false;
@@ -93,8 +98,8 @@ class NotificationService {
   Future<bool> areNotificationsEnabled() async {
     try {
       if (Platform.isAndroid) {
-        final androidPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
+        final androidPlugin =
+            _notifications.resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         return await androidPlugin?.areNotificationsEnabled() ?? false;
       } else if (Platform.isIOS) {
@@ -114,16 +119,34 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,
       channelDescription: _channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       actions: [
-        const AndroidNotificationAction(actionText, 'Text'),
-        const AndroidNotificationAction(actionVoice, 'Voice'),
-        const AndroidNotificationAction(actionSkip, 'Skip'),
+        AndroidNotificationAction(
+          actionText,
+          'Log Activity',
+          showsUserInterface: false, // Handle in background/inline
+          inputs: [
+            AndroidNotificationActionInput(
+              label: 'What are you doing?',
+            ),
+          ],
+        ),
+        AndroidNotificationAction(
+          actionVoice,
+          'Voice',
+          showsUserInterface: true,
+        ),
+        AndroidNotificationAction(
+          actionSkip,
+          'Skip',
+          showsUserInterface: false,
+          cancelNotification: true,
+        ),
       ],
     );
 
@@ -133,7 +156,7 @@ class NotificationService {
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -166,15 +189,43 @@ class NotificationService {
   }
 
   /// Handle notification response (tap or action)
-  static void _onNotificationResponse(NotificationResponse response) {
+  @pragma('vm:entry-point')
+  static Future<void> _onNotificationResponse(
+      NotificationResponse response) async {
+    // Ensure properly initialized in background isolate
+    if (response.input != null || response.actionId != null) {
+      WidgetsFlutterBinding.ensureInitialized();
+      try {
+        await di.init();
+      } catch (e) {
+        // Ignore if already initialized
+      }
+    }
+
     final instance = NotificationService();
 
-    if (response.actionId != null) {
+    if (response.input != null && response.input!.isNotEmpty) {
+      // User typed text in the notification
+      if (instance.onNotificationInput != null) {
+        instance.onNotificationInput!(response.input!);
+      } else {
+        // Fallback to static handler if callback not set (background isolate)
+        await NotificationHandler.handleNotificationInput(response.input!);
+      }
+    } else if (response.actionId != null) {
       // User tapped an action button
-      instance.onNotificationAction?.call(response.actionId);
+      if (instance.onNotificationAction != null) {
+        instance.onNotificationAction!(response.actionId);
+      } else {
+        NotificationHandler.handleNotificationAction(response.actionId);
+      }
     } else {
       // User tapped the notification itself
-      instance.onNotificationTap?.call(response.payload);
+      if (instance.onNotificationTap != null) {
+        instance.onNotificationTap!(response.payload);
+      } else {
+        NotificationHandler.handleNotificationTap();
+      }
     }
   }
 
@@ -183,8 +234,10 @@ class NotificationService {
   void setupNavigationCallbacks({
     required Function(String?) onTap,
     required Function(String?) onAction,
+    required Function(String) onInput,
   }) {
     onNotificationTap = onTap;
     onNotificationAction = onAction;
+    onNotificationInput = onInput;
   }
 }
