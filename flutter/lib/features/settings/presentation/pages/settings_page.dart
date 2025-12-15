@@ -10,6 +10,7 @@ import '../../../../features/export/presentation/bloc/export_state.dart';
 import '../../../../features/notifications/presentation/bloc/notification_bloc.dart';
 import '../../../../features/notifications/presentation/bloc/notification_event.dart';
 import '../../../../features/notifications/presentation/bloc/notification_state.dart';
+import '../../../../features/notifications/data/services/notification_service.dart';
 import '../bloc/settings_bloc.dart';
 import '../bloc/settings_event.dart';
 import '../bloc/settings_state.dart';
@@ -328,6 +329,35 @@ class SettingsView extends StatelessWidget {
                   );
                 },
               ),
+              const SizedBox(height: 24),
+              // Debug Section
+              SettingsSection(
+                title: 'DEBUG',
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: AppButton(
+                      label: 'Trigger Test Notification (5s)',
+                      isSecondary: true,
+                      onPress: () {
+                        final now = DateTime.now();
+                        GetIt.I<NotificationService>().scheduleNotification(
+                          id: 999, // Test ID
+                          title: 'Test Notification',
+                          body: 'Reply to this to test logging!',
+                          scheduledTime: now.add(const Duration(seconds: 5)),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Notification scheduled in 5 seconds')),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

@@ -147,6 +147,11 @@ class NotificationService {
           ],
         ),
         AndroidNotificationAction(
+          actionVoice,
+          'Voice',
+          showsUserInterface: true, // Opens app for voice recording
+        ),
+        AndroidNotificationAction(
           actionSkip,
           'Skip',
           showsUserInterface: false,
@@ -199,11 +204,15 @@ class NotificationService {
       NotificationResponse response) async {
     // Ensure properly initialized in background isolate
     if (response.input != null || response.actionId != null) {
+      print(
+          'NotificationService: Background response received, initializing...');
       WidgetsFlutterBinding.ensureInitialized();
       try {
         await di.init();
+        print('NotificationService: DI initialized successfully');
       } catch (e) {
-        // Ignore if already initialized
+        // Log but continue - might already be initialized
+        print('NotificationService: DI init exception (may be expected): $e');
       }
     }
 
@@ -215,7 +224,10 @@ class NotificationService {
         instance.onNotificationInput!(response.input!);
       } else {
         // Fallback to static handler if callback not set (background isolate)
-        await NotificationHandler.handleNotificationInput(response.input!);
+        await NotificationHandler.handleNotificationInput(
+          response.input!,
+          notificationId: response.id,
+        );
       }
     } else if (response.actionId != null) {
       // User tapped an action button

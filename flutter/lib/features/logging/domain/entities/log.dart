@@ -10,6 +10,8 @@ enum EntryType {
   voice,
   @JsonValue('manual')
   manual,
+  @JsonValue('skipped')
+  skipped,
 }
 
 /// Transcription status enumeration
@@ -28,11 +30,13 @@ enum TranscriptionStatus {
 class Log with _$Log {
   const factory Log({
     required String id, // UUID v4
-    required int timestamp, // Unix timestamp in milliseconds (when activity happened)
+    required int
+        timestamp, // Unix timestamp in milliseconds (when activity happened)
     required String content, // Log text content
     required EntryType entryType, // How it was created
     String? audioPath, // Path to audio file if voice entry
-    @Default(TranscriptionStatus.complete) TranscriptionStatus transcriptionStatus,
+    @Default(TranscriptionStatus.complete)
+    TranscriptionStatus transcriptionStatus,
     String? category, // Auto or manual category
     @Default([]) List<String> tags, // Flexible tags
     String? mood, // Optional mood
@@ -51,7 +55,8 @@ class Log with _$Log {
   bool get isText => entryType == EntryType.text;
 
   /// Check if transcription is pending
-  bool get isTranscriptionPending => transcriptionStatus == TranscriptionStatus.pending;
+  bool get isTranscriptionPending =>
+      transcriptionStatus == TranscriptionStatus.pending;
 
   /// Check if log was created today
   bool get isToday {

@@ -38,6 +38,7 @@ import '../../features/export/domain/repositories/export_repository.dart';
 import '../../features/voice/data/repositories/voice_repository_impl.dart';
 import '../../features/voice/domain/repositories/voice_repository.dart';
 import '../../features/voice/presentation/bloc/voice_bloc.dart';
+import '../../features/logging/data/services/skipped_interval_service.dart';
 
 import '../../features/notifications/data/services/notification_service.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
@@ -147,6 +148,15 @@ Future<void> init() async {
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepositoryImpl(
       notificationService: sl(),
+    ),
+  );
+
+  // Skipped Interval Service
+  sl.registerLazySingleton<SkippedIntervalService>(
+    () => SkippedIntervalService(
+      logsDao: sl<AppDatabase>().logsDao,
+      settingsDao: sl<AppDatabase>().settingsDao,
+      logRepository: sl(),
     ),
   );
 

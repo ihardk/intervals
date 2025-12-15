@@ -104,14 +104,21 @@ class NotificationRepositoryImpl implements NotificationRepository {
         count: count,
       );
 
+      // Cancel any existing notifications first
+      await notificationService.cancelAllNotifications();
+
+      // Schedule ALL notifications ahead with unique IDs
+      // This ensures notifications continue even if app isn't opened
       for (int i = 0; i < slots.length; i++) {
         await notificationService.scheduleNotification(
-          id: i + 1, // Start IDs from 1
+          id: i + 1, // Unique IDs starting from 1
           title: 'What are you doing?',
-          body: 'Tap to log your activity',
+          body: 'log your activity',
           scheduledTime: slots[i],
         );
       }
+
+      print('NotificationRepository: Scheduled ${slots.length} notifications');
 
       return const Right(null);
     } catch (e) {

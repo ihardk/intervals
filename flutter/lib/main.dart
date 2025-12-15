@@ -8,6 +8,7 @@ import 'shared/navigation/notification_handler.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'features/notifications/domain/entities/notification_action.dart';
+import 'features/logging/data/services/skipped_interval_service.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -15,6 +16,10 @@ Future<void> main() async {
 
   // Initialize dependency injection
   await di.init();
+
+  // Backfill skipped intervals from last log
+  final skippedIntervalService = di.sl<SkippedIntervalService>();
+  await skippedIntervalService.backfillSkippedIntervals();
 
   // Check Onboarding Status
   final getAppSettings = di.sl<GetAppSettings>();
@@ -40,6 +45,15 @@ Future<void> main() async {
   await notificationService.initialize();
 
   runApp(IntervalApp(router: router));
+
+  // Check for pending notification action (e.g., Voice button tapped while app was closed)
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final pendingAction = NotificationHandler.consumePendingAction();
+    if (pendingAction != null) {
+      print('main: Found pending action: $pendingAction');
+      router.go('/', extra: pendingAction);
+    }
+  });
 
   // Handle Home Widget Interactions
   _setupHomeWidget(router);

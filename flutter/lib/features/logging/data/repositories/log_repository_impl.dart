@@ -298,6 +298,8 @@ class LogRepositoryImpl implements LogRepository {
         return domain.EntryType.voice;
       case 'manual':
         return domain.EntryType.manual;
+      case 'skipped':
+        return domain.EntryType.skipped;
       default:
         return domain.EntryType.text;
     }
@@ -312,6 +314,8 @@ class LogRepositoryImpl implements LogRepository {
         return 'voice';
       case domain.EntryType.manual:
         return 'manual';
+      case domain.EntryType.skipped:
+        return 'skipped';
     }
   }
 

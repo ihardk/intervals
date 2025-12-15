@@ -8,6 +8,7 @@ import '../../../../shared/widgets/app_button.dart';
 
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../../../settings/presentation/bloc/settings_event.dart';
+import '../../../notifications/data/services/notification_service.dart';
 
 class IntervalSelectionPage extends StatelessWidget {
   const IntervalSelectionPage({super.key});
@@ -48,7 +49,12 @@ class _IntervalSelectionViewState extends State<IntervalSelectionView> {
     }
   }
 
-  void _handleContinue() {
+  Future<void> _handleContinue() async {
+    // Request notification permissions
+    await GetIt.I<NotificationService>().requestPermissions();
+
+    if (!mounted) return;
+
     final settingsBloc = context.read<SettingsBloc>();
 
     // Save interval
