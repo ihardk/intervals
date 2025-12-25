@@ -84,6 +84,7 @@ class SkippedIntervalService {
   }
 
   /// Backfill skipped entries between two times
+  /// Uses the same slot calculation logic as notification scheduler
   Future<void> _backfillBetweenTimes({
     required DateTime startTime,
     required DateTime endTime,
@@ -97,43 +98,108 @@ class SkippedIntervalService {
       endTime.millisecondsSinceEpoch,
     );
 
-    // Create a set of existing log timestamps (rounded to nearest interval)
+    // Create a set of existing log timestamps (with tolerance for timing differences)
     final existingTimestamps = <int>{};
     for (final log in existingLogs) {
-      // Round to nearest interval to handle slight time differences
-      final roundedTs =
-          (log.timestamp ~/ intervalDurationMs) * intervalDurationMs;
-      existingTimestamps.add(roundedTs);
+      existingTimestamps.add(log.timestamp);
     }
 
-    // Start from the next interval after last log
-    var currentTime = startTime.add(Duration(milliseconds: intervalDurationMs));
+    // Calculate expected notification slots using same logic as notification scheduler
+    final expectedSlots = _calculateExpectedSlots(
+      startTime: startTime,
+      endTime: endTime,
+      intervalDurationMs: intervalDurationMs,
+      activeHoursStart: activeHoursStart,
+      activeHoursEnd: activeHoursEnd,
+    );
 
-    while (currentTime.isBefore(endTime)) {
-      // Check if within active hours for this day
-      if (currentTime.hour >= activeHoursStart &&
-          currentTime.hour < activeHoursEnd) {
-        // Check if a log already exists for this interval
-        final roundedCurrentTs =
-            (currentTime.millisecondsSinceEpoch ~/ intervalDurationMs) *
-                intervalDurationMs;
-        if (!existingTimestamps.contains(roundedCurrentTs)) {
-          // Create a skipped entry for this interval
-          await logRepository.createLog(
-            content: 'Skipped',
-            entryType: 'skipped',
-            timestamp: currentTime.millisecondsSinceEpoch,
-          );
-          print(
-              'SkippedIntervalService: Created skipped entry at ${currentTime.toIso8601String()}');
-        } else {
-          print(
-              'SkippedIntervalService: Log already exists for ${currentTime.toIso8601String()}, skipping');
+    // Find slots that don't have corresponding logs
+    for (final slot in expectedSlots) {
+      final slotTimestamp = slot.millisecondsSinceEpoch;
+
+      // Check if a log exists within +/- 2 minutes of this slot
+      // This tolerance handles slight timing differences
+      final tolerance = 2 * 60 * 1000; // 2 minutes in milliseconds
+      final hasLog = existingTimestamps.any((timestamp) =>
+          (timestamp - slotTimestamp).abs() < tolerance);
+
+      if (!hasLog) {
+        // Create a skipped entry for this slot
+        await logRepository.createLog(
+          content: 'Skipped',
+          entryType: 'skipped',
+          timestamp: slotTimestamp,
+        );
+        print(
+            'SkippedIntervalService: Created skipped entry at ${slot.toIso8601String()}');
+      }
+    }
+  }
+
+  /// Calculate expected notification slots using same logic as notification scheduler
+  /// This ensures perfect alignment between backfilled logs and notification schedule
+  List<DateTime> _calculateExpectedSlots({
+    required DateTime startTime,
+    required DateTime endTime,
+    required int intervalDurationMs,
+    required int activeHoursStart,
+    required int activeHoursEnd,
+  }) {
+    final List<DateTime> slots = [];
+
+    // Iterate through each day from startTime to endTime
+    var currentDate = DateTime(startTime.year, startTime.month, startTime.day);
+    final endDate = DateTime(endTime.year, endTime.month, endTime.day);
+
+    while (!currentDate.isAfter(endDate)) {
+      // For each day, calculate slots starting from activeHoursStart
+      final dayStartTime = DateTime(
+        currentDate.year,
+        currentDate.month,
+        currentDate.day,
+        activeHoursStart,
+        0,
+      );
+
+      // First slot is at dayStartTime + interval
+      var currentSlot =
+          dayStartTime.add(Duration(milliseconds: intervalDurationMs));
+
+      // Generate slots for this day
+      int loopLimit = 0;
+      while (loopLimit < 1000) {
+        loopLimit++;
+
+        // Check if slot is within active hours
+        if (!_isActive(currentSlot.hour, activeHoursStart, activeHoursEnd)) {
+          break; // End of active window for this day
         }
+
+        // Only include slots that are:
+        // 1. After the startTime (last log time)
+        // 2. Before endTime (now)
+        if (currentSlot.isAfter(startTime) && currentSlot.isBefore(endTime)) {
+          slots.add(currentSlot);
+        }
+
+        // Move to next slot
+        currentSlot = currentSlot.add(Duration(milliseconds: intervalDurationMs));
       }
 
-      // Move to next interval
-      currentTime = currentTime.add(Duration(milliseconds: intervalDurationMs));
+      // Move to next day
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    return slots;
+  }
+
+  /// Check if hour is within active window
+  bool _isActive(int hour, int start, int end) {
+    if (start <= end) {
+      return hour >= start && hour < end;
+    } else {
+      // Crossing midnight (e.g., 21 to 9)
+      return hour >= start || hour < end;
     }
   }
 }

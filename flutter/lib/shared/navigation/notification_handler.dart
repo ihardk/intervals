@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 import '../../features/logging/domain/usecases/create_log.dart';
 import '../../features/notifications/domain/entities/notification_action.dart';
+import '../../features/notifications/domain/usecases/cancel_all_notifications.dart';
+import '../../features/notifications/domain/usecases/schedule_recurring_notifications.dart';
+import '../../features/settings/domain/usecases/get_app_settings.dart';
 import 'app_router.dart';
 
 /// Handles notification tap and action responses
@@ -66,12 +69,22 @@ class NotificationHandler {
   static Future<void> _createSkippedEntry() async {
     try {
       final createLog = GetIt.I<CreateLog>();
-      await createLog(
+      final result = await createLog(
         content: 'Skipped',
         entryType: 'skipped',
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
-      print('NotificationHandler: Created skipped entry');
+
+      await result.fold(
+        (failure) async => print(
+            'NotificationHandler: Failed to create skipped entry: ${failure.message}'),
+        (log) async {
+          print('NotificationHandler: Created skipped entry');
+
+          // Cancel and reschedule notifications
+          await _rescheduleNotifications();
+        },
+      );
 
       // Cancel the notification
       final plugin = FlutterLocalNotificationsPlugin();
@@ -98,11 +111,15 @@ class NotificationHandler {
       );
 
       // IMPORTANT: CreateLog returns Either<Failure, Log> - we MUST check it!
-      result.fold(
-        (failure) => print(
+      await result.fold(
+        (failure) async => print(
             'NotificationHandler: FAILED to create log: ${failure.message}'),
-        (log) => print(
-            'NotificationHandler: SUCCESS - Log created with id ${log.id}'),
+        (log) async {
+          print('NotificationHandler: SUCCESS - Log created with id ${log.id}');
+
+          // Cancel and reschedule notifications after successful log creation
+          await _rescheduleNotifications();
+        },
       );
 
       // Cancel the notification to stop the spinner
@@ -114,6 +131,38 @@ class NotificationHandler {
       }
     } catch (e) {
       print('Failed to save log from notification input: $e');
+    }
+  }
+
+  /// Helper to cancel and reschedule all notifications
+  static Future<void> _rescheduleNotifications() async {
+    try {
+      final cancelAllNotifications = GetIt.I<CancelAllNotifications>();
+      final scheduleRecurringNotifications = GetIt.I<ScheduleRecurringNotifications>();
+      final getAppSettings = GetIt.I<GetAppSettings>();
+
+      // Cancel all pending notifications
+      await cancelAllNotifications();
+
+      // Get current settings
+      final settingsResult = await getAppSettings();
+      await settingsResult.fold(
+        (failure) async {
+          print('NotificationHandler: Failed to get settings: ${failure.message}');
+        },
+        (settings) async {
+          // Schedule next batch of notifications
+          await scheduleRecurringNotifications(
+            settings.intervalDuration,
+            50, // Schedule 50 notifications ahead
+            startHour: settings.activeHoursStart,
+            endHour: settings.activeHoursEnd,
+          );
+          print('NotificationHandler: Rescheduled notifications');
+        },
+      );
+    } catch (e) {
+      print('NotificationHandler: Error rescheduling: $e');
     }
   }
 }

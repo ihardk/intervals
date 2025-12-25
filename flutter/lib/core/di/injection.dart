@@ -221,6 +221,9 @@ Future<void> init() async {
         updateLog: sl(),
         deleteLog: sl(),
         searchLogs: sl(),
+        cancelAllNotifications: sl(),
+        scheduleRecurringNotifications: sl(),
+        getAppSettings: sl(),
       ));
 
   sl.registerFactory(() => HistoryBloc(
