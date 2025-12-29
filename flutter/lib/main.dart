@@ -8,6 +8,9 @@ import 'shared/navigation/notification_handler.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:go_router/go_router.dart';
 import 'features/notifications/domain/entities/notification_action.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/categories/presentation/bloc/categories_bloc.dart';
+import 'features/categories/presentation/bloc/categories_event.dart';
 import 'features/logging/data/services/skipped_interval_service.dart';
 
 Future<void> main() async {
@@ -96,11 +99,18 @@ class IntervalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Interval',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      routerConfig: router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => di.sl<CategoriesBloc>()..add(const LoadCategories()),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Interval',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.theme,
+        routerConfig: router,
+      ),
     );
   }
 }

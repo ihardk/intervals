@@ -19,6 +19,9 @@ import '../bloc/history_event.dart';
 import '../bloc/history_state.dart';
 import '../widgets/edit_log_dialog.dart';
 import '../widgets/calendar_heatmap.dart';
+import '../../../categories/presentation/bloc/categories_bloc.dart';
+import '../../../categories/presentation/bloc/categories_state.dart';
+import '../../../categories/domain/entities/category.dart';
 
 /// View mode for history page
 enum HistoryViewMode { list, calendar }
@@ -421,23 +424,56 @@ class _HistoryLogCard extends StatelessWidget {
               ),
               if (log.category != null) ...[
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey2,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    log.category!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.grey5,
+                Builder(builder: (context) {
+                  // Color Lookup
+                  Color categoryColor = AppColors.grey2;
+                  Color textColor = AppColors.grey5;
+
+                  try {
+                    final categoriesState =
+                        context.read<CategoriesBloc>().state;
+                    if (categoriesState is CategoriesLoaded) {
+                      final category = categoriesState.categories.firstWhere(
+                        (c) =>
+                            c.name.toLowerCase() == log.category!.toLowerCase(),
+                        orElse: () => Category(
+                            id: '',
+                            name: '',
+                            keywords: [],
+                            color: '',
+                            isSystem: false,
+                            createdAt: 0,
+                            updatedAt: 0),
+                      );
+                      if (category.id.isNotEmpty &&
+                          category.color != null &&
+                          category.color!.isNotEmpty) {
+                        categoryColor = Color(
+                            int.parse(category.color!.replaceAll('#', '0xff')));
+                        textColor = AppColors.white;
+                      }
+                    }
+                  } catch (_) {}
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  ),
-                ),
+                    decoration: BoxDecoration(
+                      color: categoryColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      log.category!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: textColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }),
               ],
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../shared/widgets/app_button.dart';
@@ -248,6 +249,14 @@ class SettingsView extends StatelessWidget {
                                               val),
                                         );
                                   },
+                                ),
+                                const Divider(color: AppColors.grey2),
+                                SettingsValueTile(
+                                  label: 'Manage Categories',
+                                  description: 'Edit keywords and colors',
+                                  value: '',
+                                  onTap: () => GoRouter.of(context)
+                                      .push('/settings/categories'),
                                 ),
                               ],
                             ),

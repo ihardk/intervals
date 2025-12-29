@@ -13,6 +13,9 @@ import '../bloc/logging_state.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../features/voice/presentation/bloc/voice_bloc.dart';
+import '../../../categories/presentation/bloc/categories_bloc.dart';
+import '../../../categories/presentation/bloc/categories_state.dart';
+import '../../../categories/domain/entities/category.dart';
 
 class LoggingPage extends StatelessWidget {
   final NotificationAction? initialAction;
@@ -165,6 +168,34 @@ class _LogsList extends StatelessWidget {
         final date = DateTime.fromMillisecondsSinceEpoch(log.timestamp);
         final timeStr = DateFormat('h:mm a').format(date);
 
+        // Color Lookup
+        Color categoryColor = AppColors.grey2;
+        Color textColor = AppColors.grey5;
+
+        final categoriesState = context.read<CategoriesBloc>().state;
+        if (categoriesState is CategoriesLoaded && log.category != null) {
+          final category = categoriesState.categories.firstWhere(
+            (c) => c.name.toLowerCase() == log.category!.toLowerCase(),
+            orElse: () => Category(
+                id: '',
+                name: '',
+                keywords: [],
+                color: '',
+                isSystem: false,
+                createdAt: 0,
+                updatedAt: 0), // Dummy
+          );
+          if (category.id.isNotEmpty &&
+              category.color != null &&
+              category.color!.isNotEmpty) {
+            try {
+              categoryColor =
+                  Color(int.parse(category.color!.replaceAll('#', '0xff')));
+              textColor = AppColors.white; // High contrast for colored chips
+            } catch (_) {}
+          }
+        }
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: AppCard(
@@ -208,14 +239,15 @@ class _LogsList extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.grey2,
+                      color: categoryColor,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       log.category!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.grey5,
+                        color: textColor,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),

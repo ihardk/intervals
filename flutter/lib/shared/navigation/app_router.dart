@@ -7,6 +7,9 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/onboarding/presentation/pages/welcome_page.dart';
 import '../../features/onboarding/presentation/pages/interval_selection_page.dart';
 import '../../features/notifications/domain/entities/notification_action.dart';
+import '../../features/categories/presentation/pages/category_list_page.dart';
+import '../../features/categories/presentation/pages/category_edit_page.dart';
+import '../../features/categories/domain/entities/category.dart';
 import '../widgets/main_shell.dart';
 
 /// Global navigation key for handling deep links
@@ -56,6 +59,25 @@ GoRouter createAppRouter(bool onboardingCompleted) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: SettingsPage(),
             ),
+            routes: [
+              GoRoute(
+                path: 'categories',
+                builder: (context, state) => const CategoryListPage(),
+                routes: [
+                  GoRoute(
+                    path: 'add',
+                    builder: (context, state) => const CategoryEditPage(),
+                  ),
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) {
+                      final category = state.extra as Category;
+                      return CategoryEditPage(category: category);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
